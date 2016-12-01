@@ -1,61 +1,77 @@
-#SI-model of Baroyan-Rvachev origin with discrete time
-#v2 - using numpy.optimize instead of iterating through k
-#v3 - including I0 into fitted params
-#v4 - considering bias in t_peak (iterating through possible value range)
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""SI-model of Baroyan-Rvachev origin with discrete time
+
+Version history:
+    * v2 - using numpy.optimize instead of iterating through k
+    * v3 - including I0 into fitted params
+    * v4 - considering bias in t_peak (iterating through possible value range)
+    * v5 - refactor
+"""
+
+import csv
+import datetime
+import fnmatch
+import itertools
+import os
+import sys
 
 import matplotlib
-from scipy.optimize import minimize
+import matplotlib.dates as plt_dates
 import numpy as np
 import pylab as plt
-import datetime
+from scipy.optimize import minimize
+
 import datetime_functions as dtf
-import matplotlib.dates as mdates
-import os, itertools, fnmatch
-import csv
 
-N=3000 #epid duration
-T = 8 #disease duration for a single person
+__author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
+__copyright__ = "Copyright 2016, ITMO University"
+__version__ = "5.0"
+__maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
-def readFromCsvToList(filename):
-    # return list with all data from csv file, skipping the first row (headers)
+N = 3000  # epid duration
+T = 8  # disease duration for a single person
+
+
+def parse_csv(filename):
+    """Get list with all data from csv file, skipping the first row (headers)"""
     reader = csv.reader(open(filename), delimiter=';')
     next(reader)
     res_list = list(reader)
     return res_list
 
-def find_residuals( data ):
+
+def find_residuals(data_list):
     res = 0
-    mean = np.mean(data)
-    for i in range(0, len(data)):
-        res+=pow(data[i] - mean, 2)
+    mean = np.mean(data_list)
+    for i in range(0, len(data_list)):
+        res += pow(data_list[i] - mean, 2)
     return res
 
-def GetFluData(path):
-    """
-    На вход - двухколоночные данные:
-     - дата в форме YYYYMMDD
-     - число заболевших в течение дня
+
+def get_flu_data(path):
+    """На вход - двухколоночные данные:
+        - дата в форме YYYYMMDD
+        - число заболевших в течение дня
     """
     data = np.loadtxt(path)
-    flu_dates = data[:,0]
-    flu = data[:,1]
+    flu_dates = data[:, 0]
+    flu = data[:, 1]
+    return flu_dates, flu
 
-    return (flu_dates, flu)
 
-def cityName(city_mark):
-    if city_mark=='spb':
-        city_name = 'St Petersburg'
-    else:
-        if city_mark=='msk':
-            city_name = 'Moscow'
-        else:
-            if city_mark=='nsk':
-                city_name = 'Novosibirsk'
+def get_city_name(city_mark):
+    if city_mark == 'spb':
+        return 'St Petersburg'
+    elif city_mark == 'msk':
+        return 'Moscow'
+    elif city_mark == 'nsk':
+        return 'Novosibirsk'
+    return 'Unknown'
 
-    return city_name
 
-def q( day ):
-#returns infectivity by the day of infection - function q in B-R
+def q(day):
+    """returns infectivity by the day of infection - function q in B-R"""
     switcher = {
         2: 1,
         3: 0.9,
@@ -64,10 +80,11 @@ def q( day ):
         6: 0.15,
         7: 0.05,
     }
-    return switcher.get(day, 0) #zero infectivity by default
+    return switcher.get(day, 0)  # zero infectivity by default
 
-#def m( day ):
-##returns the  modifier for daily attendance of sick persons to healthcare units
+
+# def m(day):
+#    """returns the  modifier for daily attendance of sick persons to healthcare units"""
 #    switcher = {
 #        0: 1.1,
 #        1: 1.07,
@@ -77,327 +94,344 @@ def q( day ):
 #        5: 0.79,
 #        6: 0.3,
 #    }
-#    return switcher.get(day, 0) #zero infectivity by default
+#    return switcher.get(day, 0)  # zero infectivity by default
 
 
-#def refine_data_from_raw (y):
-##refines daily data using the statistics on daily attendance coefficients
-#    y_refined = [y[i] * m(i % 7) for i in range(0,len(y))]
+# def refine_data_from_raw(y):
+#     """refines daily data using the statistics on daily attendance coefficients"""
+#     y_refined = [y[i] * m(i % 7) for i in range(0,len(y))]
 #
-#    #replacing missed data by -1
-#    arr = np.array(y_refined)
-#    arr[arr<0]=-1
-#    return list(arr)
+#     #replacing missed data by -1
+#     arr = np.array(y_refined)
+#     arr[arr<0]=-1
+#     return list(arr)
 
-def remove_background_incidence ( y ):
-#Considering that in the lowest incidence day the disease incidence equals background+1
-    y_min = min(y)-1
-    return [y[i]-y_min for i in range(0,len(y))]
 
-#def convert_data_to_raw (y):
-##converts the model daily data back to observed data
-#    return [y[i] / m(i % 7) for i in range(0,len(y))]
+def remove_background_incidence(y):
+    """Considering that in the lowest incidence day
+    the disease incidence equals background+1"""
+    y_min = min(y) - 1
+    return [y[i] - y_min for i in range(0, len(y))]
 
-def max_elem_index( my_list ):
-#returns the index of a highest incidence
-    max_value = max(my_list)
-    max_index = my_list.index(max_value)
-    return max_index
+# def convert_data_to_raw (y):
+#     """converts the model daily data back to observed data"""
+#     return [y[i] / m(i % 7) for i in range(0,len(y))]
 
-def sum_ill (y, t):
-#summing the cumulative infectivity of the infected on the moment t
-    sum = 0
+
+def max_elem_index(my_list):
+    """returns the index of a highest incidence"""
+    return my_list.index(max(my_list))
+
+
+def sum_ill(y, t):
+    """summing the cumulative infectivity of the infected on the moment t"""
+    sum_ = 0
 
     for epid_day in range(0, T):
-        if t-epid_day<0:
+        if t - epid_day < 0:
             y_cur = 0
         else:
-            y_cur = y[t-epid_day]
+            y_cur = y[t - epid_day]
 
-        #sum = sum + y[t-epid_day]*q(epid_day)
-        sum = sum + y_cur*q(epid_day)
-    return sum
+        # sum_ = sum_ + y[t-epid_day]*q(epid_day)
+        sum_ += y_cur * q(epid_day)
+    return sum_
+
 
 def calculate_dist_squared(x, y, delta):
-#calculating the fitting coefficient r
-#x is real data, y is modeled curve
-    #delta is the difference between the epidemic starts in real data and modeled curve
-    sum = 0
-    for i in range(delta,delta+len(x)):
-        if x[i-delta]>0 and y[i]>0: #do not consider absent data which is marked by -1
-            sum = sum + pow(x[i-delta] - y[i], 2)
+    """calculating the fitting coefficient r
+    x is real data, y is modeled curve
+    delta is the difference between the epidemic starts in real data and modeled curve
+    """
+    sum_ = 0
+    for i in range(delta, delta + len(x)):
+        if x[i-delta] > 0 and y[i] > 0:  # do not consider absent data which is marked by -1
+            sum_ += pow(x[i-delta] - y[i], 2)
+    return sum_
 
-    return sum
 
 def calculate_peak_bias(x, y):
     x_peak = max(x)
     y_peak = max(y)
-    return abs(x_peak-y_peak)
+    return abs(x_peak - y_peak)
+
 
 def calculate_r(x, y, delta):
-#calculating the fitting coefficient r
-#x is real data, y is modeled curve
-#delta is the difference between the epidemic starts in real data and modeled curve
+    """calculating the fitting coefficient r
+    x is real data, y is modeled curve
+    delta is the difference between the epidemic starts in real data and modeled curve
+    """
     sum1 = 0
     sum2 = 0
-    for i in range(delta,delta+len(x)):
-        if x[i-delta]>0 and y[i]>0: #do not consider absent data which is marked by -1
-            sum1 = sum1 + x[i-delta]*y[i]
-            sum2 = sum2 + pow(y[i],2)
+    for i in range(delta, delta + len(x)):
+        if x[i-delta] > 0 and y[i] > 0:  # do not consider absent data which is marked by -1
+            sum1 += x[i-delta] * y[i]
+            sum2 += pow(y[i], 2)
+    return float(sum1) / float(sum2)
 
-    return float(sum1)/float(sum2)
 
 def calculate_s(k):
-#calculating the parameter s to find the initial values of alpha and rho
-    sum = 0
-    for tau in range(0,T):
-        sum = sum + pow(k,T-tau)*q(tau)
+    """calculating the parameter s to find the initial values of alpha and rho"""
+    sum_ = 0
+    for tau in range(0, T):
+        sum_ += pow(k, T - tau) * q(tau)
 
-    return float(pow(k,T+1))/float(sum)
+    return float(pow(k, T+1)) / float(sum_)
 
-def MakeSimulation (alpha, lam, rho, I0):
+
+# noinspection PyPep8Naming
+def make_simulation(alpha, lam, rho, I0):
 
     y = np.zeros((N+1))
     x = np.zeros((N+1))
 
-    #initial data
-    x[0] = alpha*rho
-    y[0]=I0
+    # initial data
+    x[0] = alpha * rho
+    y[0] = I0
     print('y[0] = ', y[0])
 
-    for t in range(0,N):
-        y[t+1] = lam* x[t]*sum_ill(y,t) /rho
-        #print(y[t+1])
+    for t in range(0, N):
+        y[t+1] = lam * x[t] * sum_ill(y, t) / rho
+        # print(y[t+1])
         x[t+1] = x[t] - y[t+1]
 
     return y
 
-def CutZeroData(y_model):
-#Finds the time moment to start model data plotting
-    i=0
-    while y_model[i]<10 and i<len(y_model)-1:
-        i+=1
+
+def cut_zero_data(y_model):
+    """Finds the time moment to start model data plotting"""
+    i = 0
+    while y_model[i] < 10 and i < len(y_model)-1:
+        i += 1
     return i
 
-def PlotFit(y_real, y_model, delta, fname, flu_dates, R2, city_mark):
-#Plotting model vs real data
+
+# noinspection PyPep8Naming
+def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_mark):
+    """Plotting model vs real data"""
     fig = plt.figure(figsize=(10, 6))
     matplotlib.rcParams.update({'font.size': 14})
 
-    model_beg_index = CutZeroData(y_model)
+    model_beg_index = cut_zero_data(y_model)
 
     ax = fig.add_subplot(111)
     max_len = max(len(y_model), model_beg_index + len(y_real))
 
-    date_first = flu_dates[0]-datetime.timedelta(days=delta)
+    date_first = flu_dates[0] - datetime.timedelta(days=delta)
     date_last = date_first + datetime.timedelta(days=max_len)
 
-    date_range = mdates.drange(date_first,
-                     date_last, datetime.timedelta(days=1))
+    date_range = plt_dates.drange(date_first, date_last, datetime.timedelta(days=1))
 
-    #plt.plot(range(model_beg_index,delta+len(y_real)), y_model[model_beg_index:delta+len(y_real)], 'g--',label='Model', linewidth = 2.0)
-    #plt.plot(range(delta, delta+len(y_real)),y_real,'bo', label='Data', markersize=6)
+    # plt.plot(range(model_beg_index, delta + len(y_real)),
+    #          y_model[model_beg_index: delta+len(y_real)],
+    #          'g--',label='Model', linewidth = 2.0)
+    # plt.plot(range(delta, delta + len(y_real)),
+    #          y_real,
+    #          'bo', label='Data', markersize=6)
 
-    ###DATES on Ox######
-    plt.plot_date(date_range[model_beg_index : delta + len(y_real)], y_model[model_beg_index:delta+len(y_real)], "g--", label='Model',linewidth=2.0)
-    plt.plot_date(date_range[delta : delta + len(y_real)], y_real, "bo", label='Data', markersize=6)
+    # DATES on Ox
+    plt.plot_date(date_range[model_beg_index: delta + len(y_real)],
+                  y_model[model_beg_index: delta + len(y_real)],
+                  "g--", label='Model', linewidth=2.0)
+    plt.plot_date(date_range[delta: delta + len(y_real)],
+                  y_real,
+                  "bo", label='Data', markersize=6)
 
-    #print([dtf.convertFloatToDate(x) for x in date_range[delta : delta + len(y_real)]])
+    # print([dtf.convertFloatToDate(x) for x in date_range[delta : delta + len(y_real)]])
 
-    hfmt = mdates.DateFormatter('%d.%m')
-    ax.xaxis.set_major_formatter(hfmt)
+    formatter = plt_dates.DateFormatter('%d.%m')
+    ax.xaxis.set_major_formatter(formatter)
 
-    plt.legend(loc='best',fancybox=True, shadow=True)
+    plt.legend(loc='best', fancybox=True, shadow=True)
 
-    plt.figtext(0.15, 0.8, "$R^2 = %.3f$" % (R2),  fontsize=27)
-    ####################
+    plt.figtext(0.15, 0.8, "$R^2 = %.3f$" % R2, fontsize=27)
 
     plt.ylabel('Absolute ARI incidence, cases')
 
-    plt.title(cityName(city_mark)+", "+dtf.convertDateToStringMY(date_first+ datetime.timedelta(days=model_beg_index))+" to "+dtf.convertDateToStringMY(date_first+datetime.timedelta(delta + len(y_real))))
+    plt.title('{0}, {1} to {2}'.format(
+        get_city_name(city_mark),
+        dtf.convertDateToStringMY(date_first + datetime.timedelta(days=model_beg_index)),
+        dtf.convertDateToStringMY(date_first + datetime.timedelta(delta + len(y_real)))))
     plt.grid()
 
-    plt.savefig(fname, dpi=150, bbox_inches='tight')
-    #plt.show()
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    # plt.show()
     plt.close()
 
-def FindModelFit(k, rho, I0, tpeak_bias):
-#Launching the simulation for a given parameter value and aligning the result to model
-    s = calculate_s(k)
-    alpha = 1
-    lam = s
-    #print(s)
 
-    y_model = MakeSimulation(alpha, lam, rho, I0)
-
-    #Aligning output by incidence peaks
-    peak_index_real = max_elem_index(list(FluOptimizer.data))
-    peak_index_model = max_elem_index(list(y_model))
-    delta = peak_index_model - peak_index_real + tpeak_bias #adding possible peak moment bias
-
-    #######################################################################
-    if delta<0:
-        print("Model peak index is to the left of data peak!")
-        return 10e10, [], -1, -1
-        exit()
-    #######################################################################
-
-    #Searching for the correction coefficient
-    r = calculate_r(FluOptimizer.data, y_model, delta)
-
-    alpha = r
-    lam = s/r
-
-    y_model = [r*y_model[i] for i in range(0, len(y_model))] #adjusting model curve for the best fit
-
-    #print(y_model)
-
-    dist2 = calculate_dist_squared(FluOptimizer.data, y_model, delta)
-
-    peak_bias = calculate_peak_bias(FluOptimizer.data, y_model)
-
-    #len_data = len(FluOptimizer.data)
-    #plt.plot(range(0, len_data), FluOptimizer.data)
-    #plt.plot(range(0, len_data), y_model[:len_data])
-    #plt.show()
-
-    return dist2, y_model, delta, peak_bias
-
-
+# noinspection PyPep8Naming
 class FluOptimizer:
 
-    data = [] # входной массив измерений
+    data = []  # входной массив измерений
     rho = 0
 
-    dist_zero = 0
     tpeak_bias = 0
 
     def __init__(self, *args):
         pass
 
+    @staticmethod
+    def find_model_fit(k, rho, I0, tpeak_bias, data):
+        """Launching the simulation for a given parameter value and aligning the result to model"""
+        s = calculate_s(k)
+        alpha = 1
+        lam = s
+        # print(s)
+
+        y_model = make_simulation(alpha, lam, rho, I0)
+
+        # Aligning output by incidence peaks
+        peak_index_real = max_elem_index(list(data))
+        peak_index_model = max_elem_index(list(y_model))
+        delta = peak_index_model - peak_index_real + tpeak_bias  # adding possible peak moment bias
+
+        #######################################################################
+        if delta < 0:
+            sys.stderr.write("Model peak index is to the left of data peak!\n")
+            return 10e10, [], -1, -1
+        #######################################################################
+
+        # Searching for the correction coefficient
+        r = calculate_r(data, y_model, delta)
+        # alpha = r
+        # lam = s/r
+
+        y_model = [r * y_item for y_item in y_model]  # adjusting model curve for the best fit
+        # print(y_model)
+
+        dist2 = calculate_dist_squared(data, y_model, delta)
+
+        peak_bias = calculate_peak_bias(data, y_model)
+
+        # len_data = len(FluOptimizer.data)
+        # plt.plot(range(0, len_data), FluOptimizer.data)
+        # plt.plot(range(0, len_data), y_model[:len_data])
+        # plt.show()
+
+        return dist2, y_model, delta, peak_bias
+
     # функция оптимизации
     @staticmethod
-    def fitFunction(k):
-        #print(k[0],k[1])
-        dist2, y_model, delta, peak_bias = FindModelFit(k[0], FluOptimizer.rho, k[1], FluOptimizer.tpeak_bias)
-        #print(1- dist2/FluOptimizer.dist_zero)
-
+    def fit_function(k):
+        # print(k[0],k[1])
+        dist2, y_model, delta, peak_bias = FluOptimizer.find_model_fit(
+            k[0], FluOptimizer.rho, k[1], FluOptimizer.tpeak_bias, FluOptimizer.data)
         return dist2
-        #return peak_bias
+        # return peak_bias
 
-
-    def fitOneOutbreak(path, sample_size, city_mark, pop_quantity):
-        dates, y_real = GetFluData(path)
-        y_real = remove_background_incidence( y_real )
+    @staticmethod
+    def fit_one_outbreak(path, city_mark, pop_quantity, dates, y_real):
         FluOptimizer.data = y_real
-
         FluOptimizer.rho = pop_quantity
+        res2 = find_residuals(y_real)  # Finding the squares of residuals between the real data and it math expectation
 
-        res2 = find_residuals(y_real) #Finding the squares of residuals between the real data and it math expectation
+        k_range = (1.02, 1.6)
+        I0_range = (10000.0, 10000.0)  # (0.1, 100)
+        tpeak_bias_range = range(-7, 7)  # (-3, 3)
 
-        FluOptimizer.dist_zero = res2
+        params_range = (k_range, I0_range)
 
-        k_range = (1.02,1.6)
-        I0_range = (10000.0, 10000.0) #(0.1,100)
-        tpeak_bias_range = (-7,7) #(-3, 3)
-
-        params_range = (k_range,I0_range)
-        
-
-        #cur_opt_fit = 0
+        # cur_opt_fit = 0
         k_opt = 0
         R_square_opt = 0
         tpeak_bias_opt = 0
 
         # generating unifromly distributed init values for k
-        size2 = 25 #25
-        init_list = []
-        for i in range(0, len(params_range)):
-            init_list.append(np.random.uniform(params_range[i][0], params_range[i][1], size2))
-        init_list=np.array(init_list)
+        size2 = 25
+        # np.random.seed(42)
+        init_list = [np.random.uniform(param[0], param[1], size2) for param in params_range]
+        init_list = np.array(init_list)
 
-        for j in range(len(init_list[0,:])):
-            params_init = [init_list[0,j],init_list[1,j]] #k, I0
+        for j in range(len(init_list[0, :])):
+            params_init = [init_list[0, j], init_list[1, j]]  # k, I0
             print(params_init)
 
-            for tpeak_bias_cur in range(tpeak_bias_range[0], tpeak_bias_range[1]):
+            for tpeak_bias_cur in tpeak_bias_range:
                 print(tpeak_bias_cur)
                 FluOptimizer.tpeak_bias = tpeak_bias_cur
-                K = minimize(FluOptimizer.fitFunction, params_init, method='L-BFGS-B', bounds=params_range)
+                K = minimize(FluOptimizer.fit_function, params_init, method='L-BFGS-B', bounds=params_range)
 
-                fun_val = K.fun #fit value
-                R_square = 1- fun_val/res2
-                #peak_bias = K.fun
+                fun_val = K.fun  # fit value
+                R_square = 1 - fun_val/res2
+                # peak_bias = K.fun
 
                 print('done, R= ', R_square)
-                #print('done, dist peak= ', K.fun)
+                # print('done, dist peak= ', K.fun)
 
-                K1 = list(K.x) #final bunch of optimal values
-                k_cur=K1[0]
+                K1 = list(K.x)  # final bunch of optimal values
+                k_cur = K1[0]
                 I0_cur = K1[1]
 
-                if R_square> R_square_opt:
-                #if peak_bias< peak_bias_opt:
+                # if peak_bias < peak_bias_opt:
+                if R_square > R_square_opt:
                     k_opt = k_cur
                     I0_opt = I0_cur
                     R_square_opt = R_square
                     tpeak_bias_opt = tpeak_bias_cur
                     print(R_square_opt)
-                    #print(peak_bias_opt)
+                    # print(peak_bias_opt)
 
+            # print(k_opt, R_square)
 
-            #print(k_opt, R_square)
-
-        dist2, y_model, delta, peak_bias = FindModelFit(k_opt, FluOptimizer.rho, I0_opt, tpeak_bias_opt)
-
+        dist2, y_model, delta, peak_bias = FluOptimizer.find_model_fit(
+            k_opt, FluOptimizer.rho, I0_opt, tpeak_bias_opt, FluOptimizer.data)
         print(y_model)
 
-        #print('Opt: ', R_square_opt)
-        ###
-        fun_val = dist2
-        R_square_opt = 1- dist2/res2
-        print('Opt calc: ', 1- dist2/res2)
+        # print('Opt: ', R_square_opt)
+        # fun_val = dist2
+        R_square_opt = 1 - dist2/res2
+        print('Opt calc: ', 1 - dist2/res2)
 
-        myDate = (path[-12:-8],path[-8:-6],path[-6:-4])
-        fpath = 'out25\\'+city_mark+'\\'
-        fname_out_txt = 'K_out_'+city_mark+'.txt'
+        filepath = 'out25/%s/' % city_mark
+        filename_out_txt = 'K_out_%s.txt' % city_mark
 
         dates_new = [dtf.convertFloatToDate(x) for x in dates]
-        f_handle = open(fpath+fname_out_txt, 'ab')
+        f_handle = open(filepath + filename_out_txt, 'ab')
 
-        myDate = (path[-12:-8],path[-8:-6],path[-6:-4])# извлекается из имени файлов
-        myDate_int = int(str(myDate[0])+str(myDate[1])+str(myDate[2]))
-        np.savetxt(f_handle, np.column_stack((myDate_int, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta)), fmt="%d %f %f %f %d %d")
+        my_date = (path[-12:-8], path[-8:-6], path[-6:-4])  # извлекается из имени файлов
+        my_date_int = int(str(my_date[0]) + str(my_date[1]) + str(my_date[2]))
+        np.savetxt(f_handle,
+                   np.column_stack((my_date_int, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta)),
+                   fmt="%d %f %f %f %d %d")
         f_handle.close()
 
-        fname_out_plot = 'fig3_{0}{1}{2}_'.format(myDate[0],myDate[1],myDate[2]) + city_mark+'.png'
-        PlotFit(FluOptimizer.data, y_model, delta, fpath+fname_out_plot, dates_new, R_square_opt, city_mark)
+        filename_out_plot = 'fig3_{0}{1}{2}_{3}.png'.format(my_date[0], my_date[1], my_date[2], city_mark)
+        plot_fit(FluOptimizer.data, y_model, delta, filepath + filename_out_plot, dates_new, R_square_opt, city_mark)
 
 
-for city_mark in ['msk']: #for three cities ,'msk','nsk']
-    print(city_mark)
-    population = {} # year: population
-    population_list = readFromCsvToList(r'input_population\\population_'+city_mark+'.csv')
+def main():
+    for city_mark in ['msk']:  # for three cities ,'msk','nsk']
+        print(city_mark)
+        population = {}  # year: population
+        population_list = parse_csv(r'input_population/population_%s.csv' % city_mark)
 
-    for item in population_list:
+        for item in population_list:
             population[item[0]] = float(item[1])
 
-    #root = r'FLU\\spb\\'
-    root = r'FLU_rjnamm_rev\\FLU_'+city_mark+'\\'
-    allFiles =  list( itertools.chain(* [ [os.path.join(x[0],  f) for f in fnmatch.filter( x[2],"*.txt")] for x in os.walk(root) ]) )
+        root = r'FLU_rjnamm_rev/FLU_%s/' % city_mark
+        all_files = list(
+            itertools.chain(*[
+                [os.path.join(x[0], f) for f in fnmatch.filter(x[2], "*.txt")]
+                for x in os.walk(root)
+            ])
+        )
 
-    init_data_point_numbers = [-1]
-    #init_data_point_numbers = range(5,45)
+        init_data_point_numbers = [-1]
+        # init_data_point_numbers = range(5, 45)
 
-    for file in allFiles:
-        for i in init_data_point_numbers:
-            print("Init points = ", i)
-            myYear = (file[-12:-8])
-            #print(population[myYear])
-            FluOptimizer.fitOneOutbreak(file, i, city_mark, population[myYear])
+        for file in all_files:
+            for i in init_data_point_numbers:
+                print("Init points = ", i)
+                my_year = (file[-12:-8])
+                # print(population[my_year])
+                dates, y_real = get_flu_data(file)
+                y_real = remove_background_incidence(y_real)
+                FluOptimizer.fit_one_outbreak(file, city_mark, population[my_year], dates, y_real)
 
-#for file in allFiles:
- #   FluOptimizer.fitOneOutbreak(file)
+    # for file in all_files:
+    #    FluOptimizer.fit_one_outbreak(file)
 
-#FluOptimizer.fitOneOutbreak('epi_19861028.txt')
+    # FluOptimizer.fit_one_outbreak('epi_19861028.txt')
 
+if __name__ == '__main__':
+    main()
