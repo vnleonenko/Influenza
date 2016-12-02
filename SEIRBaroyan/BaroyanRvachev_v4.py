@@ -15,6 +15,7 @@ import fnmatch
 import itertools
 import os
 import sys
+from functools import partial
 
 import matplotlib
 import matplotlib.dates as plt_dates
@@ -31,6 +32,9 @@ __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 N = 3000  # epid duration
 T = 8  # disease duration for a single person
+K_RANGE = (1.02, 1.6)
+I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
+TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
 
 
 def parse_csv(filename):
@@ -42,6 +46,7 @@ def parse_csv(filename):
 
 
 def find_residuals(data_list):
+    """Finding the squares of residuals between the real data and it math expectation"""
     res = 0
     mean = np.mean(data_list)
     for i in range(0, len(data_list)):
@@ -181,20 +186,17 @@ def calculate_s(k):
 
 # noinspection PyPep8Naming
 def make_simulation(alpha, lam, rho, I0):
-
     y = np.zeros((N+1))
     x = np.zeros((N+1))
 
     # initial data
     x[0] = alpha * rho
     y[0] = I0
-    print('y[0] = ', y[0])
 
     for t in range(0, N):
         y[t+1] = lam * x[t] * sum_ill(y, t) / rho
         # print(y[t+1])
         x[t+1] = x[t] - y[t+1]
-
     return y
 
 
@@ -207,7 +209,7 @@ def cut_zero_data(y_model):
 
 
 # noinspection PyPep8Naming
-def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_mark):
+def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_name):
     """Plotting model vs real data"""
     fig = plt.figure(figsize=(10, 6))
     matplotlib.rcParams.update({'font.size': 14})
@@ -249,7 +251,7 @@ def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_mark):
     plt.ylabel('Absolute ARI incidence, cases')
 
     plt.title('{0}, {1} to {2}'.format(
-        get_city_name(city_mark),
+        city_name,
         dtf.convertDateToStringMY(date_first + datetime.timedelta(days=model_beg_index)),
         dtf.convertDateToStringMY(date_first + datetime.timedelta(delta + len(y_real)))))
     plt.grid()
@@ -260,85 +262,73 @@ def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_mark):
 
 
 # noinspection PyPep8Naming
+def find_model_fit(k, rho, I0, tpeak_bias, data):
+    """Launching the simulation for a given parameter value and aligning the result to model"""
+    s = calculate_s(k)
+    alpha = 1
+    lam = s
+    # print(s)
+
+    y_model = make_simulation(alpha, lam, rho, I0)
+
+    # Aligning output by incidence peaks
+    peak_index_real = max_elem_index(list(data))
+    peak_index_model = max_elem_index(list(y_model))
+    delta = peak_index_model - peak_index_real + tpeak_bias  # adding possible peak moment bias
+
+    #######################################################################
+    if delta < 0:
+        sys.stderr.write("Model peak index is to the left of data peak!\n")
+        return 10e10, [], -1, -1
+    #######################################################################
+
+    # Searching for the correction coefficient
+    r = calculate_r(data, y_model, delta)
+    # alpha = r
+    # lam = s/r
+
+    y_model = [r * y_item for y_item in y_model]  # adjusting model curve for the best fit
+    # print(y_model)
+
+    dist2 = calculate_dist_squared(data, y_model, delta)
+
+    peak_bias = calculate_peak_bias(data, y_model)
+
+    # len_data = len(FluOptimizer.data)
+    # plt.plot(range(0, len_data), FluOptimizer.data)
+    # plt.plot(range(0, len_data), y_model[:len_data])
+    # plt.show()
+
+    return dist2, y_model, delta, peak_bias
+
+
+# noinspection PyPep8Naming
+def fit_function(params, rho, tpeak_bias, data):
+    k, I0 = params
+    dist2, y_model, delta, peak_bias = find_model_fit(k, rho, I0, tpeak_bias, data)
+    return dist2
+
+
+# noinspection PyPep8Naming
 class FluOptimizer:
+    def __init__(self, data, population_quantity):
+        self.data = data
+        self.rho = population_quantity
+        self.res2 = find_residuals(self.data)
 
-    data = []  # входной массив измерений
-    rho = 0
+        self.k_opt = None
+        self.I0_opt = None
+        self.R_square_opt = 0
+        self.tpeak_bias_opt = None
 
-    tpeak_bias = 0
+    def fit_one_outbreak(self):
+        params_range = (K_RANGE, I0_RANGE)
 
-    def __init__(self, *args):
-        pass
-
-    @staticmethod
-    def find_model_fit(k, rho, I0, tpeak_bias, data):
-        """Launching the simulation for a given parameter value and aligning the result to model"""
-        s = calculate_s(k)
-        alpha = 1
-        lam = s
-        # print(s)
-
-        y_model = make_simulation(alpha, lam, rho, I0)
-
-        # Aligning output by incidence peaks
-        peak_index_real = max_elem_index(list(data))
-        peak_index_model = max_elem_index(list(y_model))
-        delta = peak_index_model - peak_index_real + tpeak_bias  # adding possible peak moment bias
-
-        #######################################################################
-        if delta < 0:
-            sys.stderr.write("Model peak index is to the left of data peak!\n")
-            return 10e10, [], -1, -1
-        #######################################################################
-
-        # Searching for the correction coefficient
-        r = calculate_r(data, y_model, delta)
-        # alpha = r
-        # lam = s/r
-
-        y_model = [r * y_item for y_item in y_model]  # adjusting model curve for the best fit
-        # print(y_model)
-
-        dist2 = calculate_dist_squared(data, y_model, delta)
-
-        peak_bias = calculate_peak_bias(data, y_model)
-
-        # len_data = len(FluOptimizer.data)
-        # plt.plot(range(0, len_data), FluOptimizer.data)
-        # plt.plot(range(0, len_data), y_model[:len_data])
-        # plt.show()
-
-        return dist2, y_model, delta, peak_bias
-
-    # функция оптимизации
-    @staticmethod
-    def fit_function(k):
-        # print(k[0],k[1])
-        dist2, y_model, delta, peak_bias = FluOptimizer.find_model_fit(
-            k[0], FluOptimizer.rho, k[1], FluOptimizer.tpeak_bias, FluOptimizer.data)
-        return dist2
-        # return peak_bias
-
-    @staticmethod
-    def fit_one_outbreak(path, city_mark, pop_quantity, dates, y_real):
-        FluOptimizer.data = y_real
-        FluOptimizer.rho = pop_quantity
-        res2 = find_residuals(y_real)  # Finding the squares of residuals between the real data and it math expectation
-
-        k_range = (1.02, 1.6)
-        I0_range = (10000.0, 10000.0)  # (0.1, 100)
-        tpeak_bias_range = range(-7, 7)  # (-3, 3)
-
-        params_range = (k_range, I0_range)
-
-        # cur_opt_fit = 0
-        k_opt = 0
-        R_square_opt = 0
-        tpeak_bias_opt = 0
+        # k_opt, R_square_opt, I0_opt, tpeak_bias_opt = 0, 0, 0, 0
 
         # generating unifromly distributed init values for k
-        size2 = 25
-        # np.random.seed(42)
+        size2 = 2
+        np.random.seed(42)
         init_list = [np.random.uniform(param[0], param[1], size2) for param in params_range]
         init_list = np.array(init_list)
 
@@ -346,62 +336,47 @@ class FluOptimizer:
             params_init = [init_list[0, j], init_list[1, j]]  # k, I0
             print(params_init)
 
-            for tpeak_bias_cur in tpeak_bias_range:
+            for tpeak_bias_cur in TPEAK_BIAS_RANGE:
                 print(tpeak_bias_cur)
-                FluOptimizer.tpeak_bias = tpeak_bias_cur
-                K = minimize(FluOptimizer.fit_function, params_init, method='L-BFGS-B', bounds=params_range)
+                partial_function = partial(fit_function, rho=self.rho, tpeak_bias=tpeak_bias_cur, data=self.data)
+                K = minimize(partial_function, params_init, method='L-BFGS-B', bounds=params_range)
 
                 fun_val = K.fun  # fit value
-                R_square = 1 - fun_val/res2
-                # peak_bias = K.fun
-
+                R_square = 1 - fun_val/self.res2
                 print('done, R= ', R_square)
-                # print('done, dist peak= ', K.fun)
-
-                K1 = list(K.x)  # final bunch of optimal values
-                k_cur = K1[0]
-                I0_cur = K1[1]
 
                 # if peak_bias < peak_bias_opt:
-                if R_square > R_square_opt:
-                    k_opt = k_cur
-                    I0_opt = I0_cur
-                    R_square_opt = R_square
-                    tpeak_bias_opt = tpeak_bias_cur
-                    print(R_square_opt)
+                if R_square > self.R_square_opt:
+                    k_cur, I0_cur = list(K.x)  # final bunch of optimal values
+                    self.k_opt = k_cur
+                    self.I0_opt = I0_cur
+                    self.R_square_opt = R_square
+                    self.tpeak_bias_opt = tpeak_bias_cur
+                    # print(R_square_opt)
                     # print(peak_bias_opt)
-
             # print(k_opt, R_square)
 
-        dist2, y_model, delta, peak_bias = FluOptimizer.find_model_fit(
-            k_opt, FluOptimizer.rho, I0_opt, tpeak_bias_opt, FluOptimizer.data)
-        print(y_model)
+    def save_results(self, dates, date_int, out_txt, out_png, city_name):
+        dist2, y_model, delta, peak_bias = find_model_fit(
+            self.k_opt, self.rho, self.I0_opt, self.tpeak_bias_opt, self.data)
 
+        print(y_model)
         # print('Opt: ', R_square_opt)
         # fun_val = dist2
-        R_square_opt = 1 - dist2/res2
-        print('Opt calc: ', 1 - dist2/res2)
+        R_square_opt = 1 - dist2/self.res2
+        print('Opt calc: ', R_square_opt)
 
-        filepath = 'out25/%s/' % city_mark
-        filename_out_txt = 'K_out_%s.txt' % city_mark
+        with open(out_txt, 'ab') as f_handle:
+            np.savetxt(f_handle,
+                       np.column_stack((date_int, R_square_opt, self.k_opt, self.I0_opt, self.tpeak_bias_opt, delta)),
+                       fmt="%d %f %f %f %d %d")
 
         dates_new = [dtf.convertFloatToDate(x) for x in dates]
-        f_handle = open(filepath + filename_out_txt, 'ab')
-
-        my_date = (path[-12:-8], path[-8:-6], path[-6:-4])  # извлекается из имени файлов
-        my_date_int = int(str(my_date[0]) + str(my_date[1]) + str(my_date[2]))
-        np.savetxt(f_handle,
-                   np.column_stack((my_date_int, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta)),
-                   fmt="%d %f %f %f %d %d")
-        f_handle.close()
-
-        filename_out_plot = 'fig3_{0}{1}{2}_{3}.png'.format(my_date[0], my_date[1], my_date[2], city_mark)
-        plot_fit(FluOptimizer.data, y_model, delta, filepath + filename_out_plot, dates_new, R_square_opt, city_mark)
+        plot_fit(self.data, y_model, delta, out_png, dates_new, R_square_opt, city_name)
 
 
 def main():
     for city_mark in ['msk']:  # for three cities ,'msk','nsk']
-        print(city_mark)
         population = {}  # year: population
         population_list = parse_csv(r'input_population/population_%s.csv' % city_mark)
 
@@ -416,22 +391,27 @@ def main():
             ])
         )
 
-        init_data_point_numbers = [-1]
+        # init_data_point_numbers = [-1]
         # init_data_point_numbers = range(5, 45)
 
         for file in all_files:
-            for i in init_data_point_numbers:
-                print("Init points = ", i)
-                my_year = (file[-12:-8])
-                # print(population[my_year])
-                dates, y_real = get_flu_data(file)
-                y_real = remove_background_incidence(y_real)
-                FluOptimizer.fit_one_outbreak(file, city_mark, population[my_year], dates, y_real)
+            # for i in init_data_point_numbers:
+            #     print("Init points = ", i)
+            my_year = (file[-12:-8])
+            # print(population[my_year])
+            dates, y_real = get_flu_data(file)
+            data = remove_background_incidence(y_real)
 
-    # for file in all_files:
-    #    FluOptimizer.fit_one_outbreak(file)
+            optimizer = FluOptimizer(data, population[my_year])
+            optimizer.fit_one_outbreak()
 
-    # FluOptimizer.fit_one_outbreak('epi_19861028.txt')
+            filepath = 'out25/%s/' % city_mark
+            filename_out_txt = 'K_out_%s.txt' % city_mark
+            out_txt = filepath + filename_out_txt
+            date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
+            out_png = 'fig3_{0}_{1}.png'.format(date_int, city_mark)
+            city_name = get_city_name(city_mark)
+            optimizer.save_results(dates, date_int, out_txt, out_png, city_name)
 
 if __name__ == '__main__':
     main()
