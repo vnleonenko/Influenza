@@ -16,11 +16,11 @@ import time
 from functools import partial
 
 import numpy as np
-from scipy.optimize import minimize
 
 import datetime_functions as dtf
 from draw_data import plot_fit
-from optimizer import FluParams, FluOptimizer
+from methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer, GeneticOptimizer
+from optimizer import FluParams
 from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
@@ -32,59 +32,11 @@ __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 class Params(FluParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
-    SIZE = 25
+    SIZE = 1
     DISABLE_RANDOM = True
     K_RANGE = (1.02, 1.6)
     I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
-
-
-class BFGSOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='BFGS', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class LBFGSBOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='L-BFGS-B', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class SLSQPOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='SLSQP', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class NelderMeadOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='Nelder-Mead', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class PowellOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='Powell', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class CGOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='CG', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class TNCOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='TNC', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
-
-
-class COBYLAOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='COBYLA', bounds=minimize_params_range)
-        return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
 def fit(params, population, city_mark):
@@ -103,12 +55,12 @@ def fit(params, population, city_mark):
     filename_out_txt = 'K_out_%s_%s.txt' % (date_int, optimizer_cls.__name__)
 
     with open(filepath + filename_out_txt, 'ab') as f_handle:
-        f_handle.write((str(y_model) + '\n').encode())
-        f_handle.write(('Opt calc: ' + str(R_square_opt) + '\n').encode())
+        # f_handle.write((str(y_model) + '\n').encode())
+        # f_handle.write(('Opt calc: ' + str(R_square_opt) + '\n').encode())
         np.savetxt(f_handle,
                    np.column_stack((date_int, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta)),
                    fmt="%d %f %f %f %d %d")
-        f_handle.write(('Elapsed time: %d seconds' % elapsed_time).encode())
+        f_handle.write(('Elapsed time: %d seconds\n\n' % elapsed_time).encode())
 
     out_png = filepath + 'fig4_{0}_{1}_{2}.png'.format(date_int, city_mark, optimizer_cls.__name__)
     dates_new = [dtf.convertFloatToDate(x) for x in dates]
@@ -126,19 +78,19 @@ def fit_safe(params, population, city_mark):
         return e
 
 
-def invoke(files, optimizers, population, city_mark):
-    for params in itertools.product(files, optimizers):
-        fit_safe(params, population, city_mark)
+def invoke(files, optimizers, population, city_mark, parallel=True):
+    if parallel:
+        calc = partial(fit_safe, population=population, city_mark=city_mark)
 
+        import multiprocessing
+        pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        pool.map(calc, itertools.product(files, optimizers))
+        pool.close()
+        pool.join()
 
-def invoke_parallel(files, optimizers, population, city_mark):
-    calc = partial(fit_safe, population=population, city_mark=city_mark)
-
-    import multiprocessing
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    pool.map(calc, itertools.product(files, optimizers))
-    pool.close()
-    pool.join()
+    else:
+        for params in itertools.product(files, optimizers):
+            fit(params, population, city_mark)
 
 
 def main():
@@ -158,9 +110,10 @@ def main():
         )
 
         # parse_and_plot_results(city_mark, [TNCOptimizer], all_files)
-        # invoke(all_files, [SLSQPOptimizer], population, city_mark)
-        invoke_parallel(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
-                        population, city_mark)
+        # invoke(all_files, [GeneticOptimizer], population, city_mark, parallel=False)
+        invoke(all_files, [GeneticOptimizer], population, city_mark)
+        # invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+        #        population, city_mark)
 
 if __name__ == '__main__':
     t0 = time.time()

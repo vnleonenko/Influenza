@@ -192,10 +192,10 @@ class FluOptimizer:
         self.R_square_opt = 0
         self.tpeak_bias_opt = None
 
-    def optimize(self, tpeak_bias, minimize_params, minimize_params_range):
+    def optimize(self, function, minimize_params, minimize_params_range):
         """
 
-        :param tpeak_bias:
+        :param function:
         :param minimize_params: (K, I0)
         :param minimize_params_range:
         :return: (value, args) -- fit value, final bunch of optimal values
@@ -214,19 +214,21 @@ class FluOptimizer:
         # k_opt, R_square_opt, I0_opt, tpeak_bias_opt = 0, 0, 0, 0
 
         # generating unifromly distributed init values for k
+        K_min, K_max = self.params.K_RANGE
+        I0_min, I0_max = self.params.I0_RANGE
         size = self.params.SIZE
         if self.params.DISABLE_RANDOM:
             np.random.seed(42)
-        init_list = [np.random.uniform(param[0], param[1], size) for param in params_range]
-        init_list = np.array(init_list)
+        init_params = zip(
+            np.random.uniform(K_min, K_max, size),
+            np.random.uniform(I0_min, I0_max, size)
+        )
 
-        for j in range(len(init_list[0, :])):
-            params_init = [init_list[0, j], init_list[1, j]]  # k, I0
-
+        for params in init_params:
             for tpeak_bias_cur in self.params.TPEAK_BIAS_RANGE:
                 function = self._get_fit_function(tpeak_bias_cur)
 
-                value, args = self.optimize(function, params_init, params_range)
+                value, args = self.optimize(function, params, params_range)
                 k_cur, I0_cur = args
 
                 R_square = 1 - value/self.res2
