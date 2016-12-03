@@ -26,3 +26,36 @@
 #     """converts the model daily data back to observed data"""
 #     return [y[i] / m(i % 7) for i in range(0,len(y))]
 
+
+# from itertools import cycle
+# from matplotlib.font_manager import FontProperties
+# lines = ["-", "--", "-.", ":"]
+# line_cycler = cycle(lines)
+# font = {'family': 'Verdana', 'weight': 'normal'}
+# matplotlib.rc('font', **font)
+#
+# # ________ визуализация ________
+# def DrawNewInfCases(DAYINF_TUP, WEEKINF_TUP):
+#     DAYINF,DAYX = DAYINF_TUP
+#     WEEKINF,WEEKX = WEEKINF_TUP
+#
+#     # ------- СТАТИСТИКА ПО ЗАБОЛЕВАНИЮ: -------
+#     # ТЕКУЩЕЕ:
+#     # S - общее число здоровых
+#     # E - текущее число инфицированных (латентная стадия)
+#     # I - текущее число инфицированных (активная стадия)
+#     # T - общее число выздоровевших
+#     # R - общее число умерших
+#     f1 = plt.figure()
+#     fontP = FontProperties()
+#     fontP.set_size('small')
+#
+#     plt.plot(DAYX, DAYINF, next(line_cycler), label='Число заразившихся (день)', linewidth=2.0)
+#     #plt.plot(WEEKX, WEEKINF, next(linecycler), label='Число заразившихся (неделя)', linewidth=2.0)
+#
+#     plt.grid()
+#     plt.legend(loc='best',fancybox=True, shadow=True)
+#     plt.xlabel('время')
+#     plt.ylabel('популяция')
+#     plt.title('Число заразившихся (день/неделя)')
+#     plt.show()

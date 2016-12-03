@@ -1,5 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""SI-model of Baroyan-Rvachev origin with discrete time
+
+Version history:
+    * v2 - using numpy.optimize instead of iterating through k
+    * v3 - including I0 into fitted params
+    * v4 - considering bias in t_peak (iterating through possible value range)
+    * v5 - refactor
+"""
 
 import numpy as np
+
+__author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
+__copyright__ = "Copyright 2016, ITMO University"
+__version__ = "5.0"
+__maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 
 class FluParams:

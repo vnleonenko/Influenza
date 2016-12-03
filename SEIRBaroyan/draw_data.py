@@ -1,10 +1,11 @@
-# -*- coding: cp1251 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Auxiliary visualization procedures"""
+
 import datetime
-from itertools import cycle
 
 import matplotlib
 import matplotlib.dates as plt_dates
-from matplotlib.font_manager import FontProperties
 import pylab as plt
 
 import datetime_functions as dtf
@@ -82,15 +83,15 @@ def parse_and_plot_results(city_mark, methods, all_files):
             dates, y_real = get_flu_data(file)
             data = remove_background_incidence(y_real)
 
+            date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])
             filepath = 'out25/%s/' % city_mark
-            filename_out_txt = 'K_out_%s_%s.txt' % (city_mark, method.__name__)
+            filename_out_txt = 'K_out_%s_%s.txt' % (date_int, method.__name__)
             out_txt = filepath + filename_out_txt
-            date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
 
             with open(out_txt, 'r+') as f:
                 y_model = ast.literal_eval(f.readline()[:-1])
                 f.readline()
-                date_int, R_square_opt, _, _, _, delta = f.readline()[:-1].split(' ')
+                _, R_square_opt, _, _, _, delta = f.readline()[:-1].split(' ')
                 R_square_opt = float(R_square_opt)
                 delta = int(delta)
 
@@ -99,36 +100,3 @@ def parse_and_plot_results(city_mark, methods, all_files):
                 city_name = get_city_name(city_mark)
 
                 plot_fit(data, y_model, delta, out_png, dates_new, R_square_opt, city_name, method.__name__)
-
-
-# Old stuff
-lines = ["-", "--", "-.", ":"]
-line_cycler = cycle(lines)
-font = {'family': 'Verdana', 'weight': 'normal'}
-matplotlib.rc('font', **font)
-
-# ________ визуализация ________
-def DrawNewInfCases(DAYINF_TUP,WEEKINF_TUP):
-    DAYINF,DAYX = DAYINF_TUP
-    WEEKINF,WEEKX = WEEKINF_TUP
-
-    # ------- СТАТИСТИКА ПО ЗАБОЛЕВАНИЮ: -------
-    # ТЕКУЩЕЕ:
-    # S - общее число здоровых
-    # E - текущее число инфицированных (латентная стадия)
-    # I - текущее число инфицированных (активная стадия)
-    # T - общее число выздоровевших
-    # R - общее число умерших    
-    f1 = plt.figure()
-    fontP = FontProperties()
-    fontP.set_size('small')
-
-    plt.plot(DAYX, DAYINF, next(line_cycler), label='Число заразившихся (день)', linewidth=2.0)
-    #plt.plot(WEEKX, WEEKINF, next(linecycler), label='Число заразившихся (неделя)', linewidth=2.0)
-
-    plt.grid()
-    plt.legend(loc='best',fancybox=True, shadow=True)
-    plt.xlabel('время')
-    plt.ylabel('популяция')
-    plt.title('Число заразившихся (день/неделя)')
-    plt.show()

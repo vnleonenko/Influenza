@@ -1,0 +1,7 @@
+numpy
+scipy
+matplotlib
+# Debian: apt-get install python3-tk
+# Windows: SET TCL_LIBRARY ... & SET TK_LIBRARY
+
+deap

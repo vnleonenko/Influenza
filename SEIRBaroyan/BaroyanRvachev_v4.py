@@ -12,6 +12,7 @@ Version history:
 import fnmatch
 import itertools
 import os
+import time
 from functools import partial
 
 import numpy as np
@@ -32,7 +33,7 @@ class Params(FluParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
     SIZE = 25
-    # DISABLE_RANDOM = True
+    DISABLE_RANDOM = True
     K_RANGE = (1.02, 1.6)
     I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
@@ -86,43 +87,58 @@ class COBYLAOptimizer(FluOptimizer):
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-def calc_stuff(file, population, city_mark, optimizer_clazz):
-    # for i in init_data_point_numbers:
-    #     print("Init points = ", i)
-    # print(population[my_year])
+def fit(params, population, city_mark):
+    file, optimizer_cls = params
     dates, y_real = get_flu_data(file)
     data = remove_background_incidence(y_real)
 
-    optimizer = optimizer_clazz(data, population[file[-12:-8]], Params())
+    t0 = time.time()
+    optimizer = optimizer_cls(data, population[file[-12:-8]], Params())
     optimizer.fit_one_outbreak()
     y_model, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta = optimizer.get_results()
+    elapsed_time = time.time() - t0
 
-    filepath = 'out25/%s/' % city_mark
-    filename_out_txt = 'K_out_%s_%s.txt' % (city_mark, optimizer_clazz.__name__)
-    out_txt = filepath + filename_out_txt
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
+    filepath = 'out25/%s/' % city_mark
+    filename_out_txt = 'K_out_%s_%s.txt' % (date_int, optimizer_cls.__name__)
 
-    with open(out_txt, 'ab') as f_handle:
+    with open(filepath + filename_out_txt, 'ab') as f_handle:
         f_handle.write((str(y_model) + '\n').encode())
         f_handle.write(('Opt calc: ' + str(R_square_opt) + '\n').encode())
         np.savetxt(f_handle,
                    np.column_stack((date_int, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta)),
                    fmt="%d %f %f %f %d %d")
+        f_handle.write(('Elapsed time: %d seconds' % elapsed_time).encode())
 
-    out_png = filepath + 'fig4_{0}_{1}_{2}.png'.format(date_int, city_mark, optimizer_clazz.__name__)
+    out_png = filepath + 'fig4_{0}_{1}_{2}.png'.format(date_int, city_mark, optimizer_cls.__name__)
     dates_new = [dtf.convertFloatToDate(x) for x in dates]
     city_name = get_city_name(city_mark)
 
-    plot_fit(data, y_model, delta, out_png, dates_new, R_square_opt, city_name, optimizer_clazz.__name__)
+    plot_fit(data, y_model, delta, out_png, dates_new, R_square_opt, city_name, optimizer_cls.__name__)
 
     return file[-12:-8]
 
 
-def calc_stuff_safe(optimizer_clazz, file, population, city_mark):
+def fit_safe(params, population, city_mark):
     try:
-        return calc_stuff(file, population, city_mark, optimizer_clazz)
+        return fit(params, population, city_mark)
     except Exception as e:
         return e
+
+
+def invoke(files, optimizers, population, city_mark):
+    for params in itertools.product(files, optimizers):
+        fit_safe(params, population, city_mark)
+
+
+def invoke_parallel(files, optimizers, population, city_mark):
+    calc = partial(fit_safe, population=population, city_mark=city_mark)
+
+    import multiprocessing
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool.map(calc, itertools.product(files, optimizers))
+    pool.close()
+    pool.join()
 
 
 def main():
@@ -141,24 +157,12 @@ def main():
             ])
         )
 
-        # init_data_point_numbers = [-1]
-        # init_data_point_numbers = range(5, 45)
-
         # parse_and_plot_results(city_mark, [TNCOptimizer], all_files)
-        # for method in [NelderMeadOptimizer, SLSQPOptimizer]:
-        #     for file in all_files:
-        #         calc_stuff(file, population, city_mark, method)
-
-        calc_parallel = partial(calc_stuff_safe, population=population, city_mark=city_mark, file=all_files[0])
-
-        import multiprocessing
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        pool.map(calc_parallel, [LBFGSBOptimizer, SLSQPOptimizer, TNCOptimizer])  # NelderMeadOptimizer
-        pool.close()
-        pool.join()
+        # invoke(all_files, [SLSQPOptimizer], population, city_mark)
+        invoke_parallel(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+                        population, city_mark)
 
 if __name__ == '__main__':
-    import time
     t0 = time.time()
     main()
-    print(time.time() - t0, 'seconds')
+    print('Total elapsed: %d seconds' % (time.time() - t0))
