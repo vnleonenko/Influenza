@@ -7,6 +7,8 @@ Version history:
     * v3 - including I0 into fitted params
     * v4 - considering bias in t_peak (iterating through possible value range)
     * v5 - refactor
+
+    TODO Usage FluOptimizer
 """
 
 import numpy as np
@@ -39,6 +41,12 @@ class FluParams:
             7: 0.05,
         }
         return switcher.get(day, 0)  # zero infectivity by default
+
+    # FIXME Params for GeneticOptimizer
+    POPULATION_SIZE = 500
+    CX_PROBABILITY = 0  # 0.5
+    MUT_PROBABILITY = 0.2  # 0.2
+    GENERATIONS_COUNT = 50
 
 
 # noinspection PyPep8Naming

@@ -50,8 +50,8 @@ class SLSQPOptimizer(FluOptimizer):
 
 
 class NelderMeadOptimizer(FluOptimizer):
-    def optimize(self, function, minimize_params, minimize_params_range):
-        result = minimize(function, minimize_params, method='Nelder-Mead', bounds=minimize_params_range)
+    def optimize(self, function, minimize_params, *args, **kwargs):
+        result = minimize(function, minimize_params, method='Nelder-Mead')
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
@@ -81,13 +81,13 @@ class COBYLAOptimizer(FluOptimizer):
 
 # noinspection PyPep8Naming
 class GeneticOptimizer(FluOptimizer):
-    POPULATION_SIZE = 200
-    CX_PROBABILITY = 0  # 0.5
-    MUT_PROBABILITY = 0.2  # 0.2
-    GENERATIONS_COUNT = 2
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        assert hasattr(self.params, 'POPULATION_SIZE')
+        assert hasattr(self.params, 'CX_PROBABILITY')
+        assert hasattr(self.params, 'MUT_PROBABILITY')
+        assert hasattr(self.params, 'GENERATIONS_COUNT')
 
         # Types
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -115,8 +115,8 @@ class GeneticOptimizer(FluOptimizer):
         I0_min, I0_max = self.params.I0_RANGE
         np.random.seed(42)
         init_params = zip(
-            np.random.uniform(K_min, K_max, self.POPULATION_SIZE),
-            np.random.uniform(I0_min, I0_max, self.POPULATION_SIZE)
+            np.random.uniform(K_min, K_max, self.params.POPULATION_SIZE),
+            np.random.uniform(I0_min, I0_max, self.params.POPULATION_SIZE)
         )
         generate_K_I0 = partial(next, init_params)
 
@@ -131,14 +131,14 @@ class GeneticOptimizer(FluOptimizer):
         toolbox.register("select", tools.selTournament, tournsize=3)
         toolbox.register("evaluate", evaluate)
 
-        population = toolbox.population(n=self.POPULATION_SIZE)
+        population = toolbox.population(n=self.params.POPULATION_SIZE)
 
         # Evaluate the entire population
         fitnesses = map(toolbox.evaluate, population)
         for ind, fitness in zip(population, fitnesses):
             ind.fitness.values = fitness
 
-        for g in range(self.GENERATIONS_COUNT):
+        for g in range(self.params.GENERATIONS_COUNT):
             # Select the next generation individuals
             offspring = toolbox.select(population, len(population))
             # Clone the selected individuals
@@ -146,13 +146,13 @@ class GeneticOptimizer(FluOptimizer):
 
             # Apply crossover and mutation on the offspring
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
-                if np.random.random() < self.CX_PROBABILITY:
+                if np.random.random() < self.params.CX_PROBABILITY:
                     toolbox.mate(child1, child2)
                     del child1.fitness.values
                     del child2.fitness.values
 
             for mutant in offspring:
-                if np.random.random() < self.MUT_PROBABILITY:
+                if np.random.random() < self.params.MUT_PROBABILITY:
                     toolbox.mutate(mutant)
                     del mutant.fitness.values
 

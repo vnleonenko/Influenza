@@ -18,7 +18,7 @@ from functools import partial
 import numpy as np
 
 import datetime_functions as dtf
-from draw_data import plot_fit
+from draw_data import plot_fit, parse_and_plot_results
 from methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer, GeneticOptimizer
 from optimizer import FluParams
 from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv
@@ -32,11 +32,18 @@ __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 class Params(FluParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
-    SIZE = 1
+    SIZE = 25
     DISABLE_RANDOM = True
     K_RANGE = (1.02, 1.6)
     I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
+
+    # Uncomment to run GeneticOptimizer
+    # SIZE = 1
+    POPULATION_SIZE = 500
+    CX_PROBABILITY = 0  # 0.5
+    MUT_PROBABILITY = 0.2  # 0.2
+    GENERATIONS_COUNT = 50
 
 
 def fit(params, population, city_mark):
@@ -78,9 +85,14 @@ def fit_safe(params, population, city_mark):
         return e
 
 
-def invoke(files, optimizers, population, city_mark, parallel=True):
+def invoke(files, optimizers, population, city_mark, parallel=True, safe=True):
+    if safe:
+        function = fit_safe
+    else:
+        function = fit
+
     if parallel:
-        calc = partial(fit_safe, population=population, city_mark=city_mark)
+        calc = partial(function, population=population, city_mark=city_mark)
 
         import multiprocessing
         pool = multiprocessing.Pool(multiprocessing.cpu_count())
@@ -90,7 +102,7 @@ def invoke(files, optimizers, population, city_mark, parallel=True):
 
     else:
         for params in itertools.product(files, optimizers):
-            fit(params, population, city_mark)
+            function(params, population, city_mark)
 
 
 def main():
@@ -109,11 +121,11 @@ def main():
             ])
         )
 
-        # parse_and_plot_results(city_mark, [TNCOptimizer], all_files)
+        # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)
         # invoke(all_files, [GeneticOptimizer], population, city_mark, parallel=False)
-        invoke(all_files, [GeneticOptimizer], population, city_mark)
-        # invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
-        #        population, city_mark)
+        # invoke(all_files, [GeneticOptimizer], population, city_mark)
+        invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+               population, city_mark)
 
 if __name__ == '__main__':
     t0 = time.time()
