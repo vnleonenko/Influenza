@@ -4,25 +4,6 @@
 Наша текущая задача в общей формулировке:
 выяснить, можно ли добиться ускорения по сравнению с BFGS, не проиграв
 в качестве калибровки (или проиграв незначительно).
-
-
-    * Подвигать значения параметров алгоритмов оптимизации (options) и
-        посмотреть, приведёт ли это к ускорению вычислений без потери
-        качества подгонки.
-
-    Например, здесь есть набор параметров для SLSQP (таблица внизу):
-    http://www.pyopt.org/reference/optimizers.slsqp.html#optimizer-options
-
-    * По указанной выше ссылке нашёл интересный комментарий к параметрам:
-        pll_type -> STR: Parallel Implementation
-        (None, ‘POA’-Parallel Objective Analysis), Default = None
-        Нужно посмотреть, нет ли там встроенной параллельной реализации для
-        оптимизационного алгоритма, и если это так, насколько корректно
-        она работает.
-
-    * Отдельно для SLSQP можно посмотреть, как скажется на качестве подгонки
-        увеличение SIZE — например, увеличить его в два раза и погонять на
-        ваших старых примерах для сравнения.
 """
 
 import itertools
@@ -194,7 +175,7 @@ def execute(params_list, optimizers, filename, population, city_mark, parallel=T
         calc = partial(function, filename=filename, population=population, city_mark=city_mark)
 
         import multiprocessing
-        pool = multiprocessing.Pool(multiprocessing.cpu_count() - 2)
+        pool = multiprocessing.Pool(multiprocessing.cpu_count())
         pool.map(calc, itertools.product(params_list, optimizers))
         pool.close()
         pool.join()
