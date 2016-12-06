@@ -1,5 +1,8 @@
 import csv
+import fnmatch
+import os
 
+import itertools
 import numpy as np
 
 
@@ -37,3 +40,12 @@ def remove_background_incidence(y):
     the disease incidence equals background+1"""
     y_min = min(y) - 1
     return [y[i] - y_min for i in range(0, len(y))]
+
+
+def get_filename_list(path):
+    return list(
+        itertools.chain(*[
+            [os.path.join(x[0], f) for f in fnmatch.filter(x[2], "*.txt")]
+            for x in os.walk(path)
+        ])
+    )

@@ -25,8 +25,9 @@ class FluParams:
 
     SIZE = 25
     DISABLE_RANDOM = False
+    RANDOM_SEED = 42  # Used if DISABLE_RANDOM is True
     K_RANGE = (1.02, 1.6)
-    I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
+    I0_RANGE = (1.0, 1.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
 
     @staticmethod
@@ -226,7 +227,7 @@ class FluOptimizer:
         I0_min, I0_max = self.params.I0_RANGE
         size = self.params.SIZE
         if self.params.DISABLE_RANDOM:
-            np.random.seed(42)
+            np.random.seed(self.params.RANDOM_SEED)
         init_params = zip(
             np.random.uniform(K_min, K_max, size),
             np.random.uniform(I0_min, I0_max, size)
@@ -242,7 +243,7 @@ class FluOptimizer:
                 R_square = 1 - value/self.res2
 
                 # if peak_bias < peak_bias_opt:
-                if R_square > self.R_square_opt:
+                if R_square > self.R_square_opt or self.k_opt is None:
                     self.k_opt = k_cur
                     self.I0_opt = I0_cur
                     self.R_square_opt = R_square

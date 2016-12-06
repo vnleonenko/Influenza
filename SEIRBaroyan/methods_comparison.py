@@ -21,7 +21,7 @@ import datetime_functions as dtf
 from draw_data import plot_fit, parse_and_plot_results
 from methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer, GeneticOptimizer
 from optimizer import FluParams
-from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv
+from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -46,16 +46,16 @@ class Params(FluParams):
     GENERATIONS_COUNT = 50
 
 
-def fit(params, population, city_mark):
-    file, optimizer_cls = params
+def fit(args, population, city_mark):
+    file, optimizer_cls = args
     dates, y_real = get_flu_data(file)
     data = remove_background_incidence(y_real)
 
-    t0 = time.time()
+    t = time.time()
     optimizer = optimizer_cls(data, population[file[-12:-8]], Params())
     optimizer.fit_one_outbreak()
     y_model, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta = optimizer.get_results()
-    elapsed_time = time.time() - t0
+    elapsed_time = time.time() - t
 
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
     filepath = 'out25/%s/' % city_mark
@@ -78,9 +78,9 @@ def fit(params, population, city_mark):
     return file[-12:-8]
 
 
-def fit_safe(params, population, city_mark):
+def fit_safe(*args, **kwargs):
     try:
-        return fit(params, population, city_mark)
+        return fit(*args, **kwargs)
     except Exception as e:
         return e
 
@@ -101,8 +101,8 @@ def invoke(files, optimizers, population, city_mark, parallel=True, safe=True):
         pool.join()
 
     else:
-        for params in itertools.product(files, optimizers):
-            function(params, population, city_mark)
+        for args in itertools.product(files, optimizers):
+            function(args, population, city_mark)
 
 
 def main():
@@ -113,16 +113,9 @@ def main():
         for item in population_list:
             population[item[0]] = float(item[1])
 
-        root = r'FLU_rjnamm_rev/FLU_%s/' % city_mark
-        all_files = list(
-            itertools.chain(*[
-                [os.path.join(x[0], f) for f in fnmatch.filter(x[2], "*.txt")]
-                for x in os.walk(root)
-            ])
-        )
+        all_files = get_filename_list(r'FLU_rjnamm_rev/FLU_%s/' % city_mark)
 
         # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)
-        # invoke(all_files, [GeneticOptimizer], population, city_mark, parallel=False)
         # invoke(all_files, [GeneticOptimizer], population, city_mark)
         invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
                population, city_mark)
