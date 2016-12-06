@@ -37,7 +37,7 @@ class Params(FluParams):
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
 
     # Uncomment to run GeneticOptimizer
-    SIZE = 1
+    # SIZE = 1
     POPULATION_SIZE = 500
     CX_PROBABILITY = 0  # 0.5
     MUT_PROBABILITY = 0.2  # 0.2
@@ -115,7 +115,7 @@ def main():
 
         # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)
         # invoke(all_files, [GeneticOptimizer], population, city_mark)
-        invoke(all_files, [SLSQPOptimizer],  #, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+        invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
                population, city_mark)
 
 if __name__ == '__main__':
