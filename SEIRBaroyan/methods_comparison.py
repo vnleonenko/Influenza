@@ -9,19 +9,17 @@ Version history:
     * v5 - refactor
 """
 
-import fnmatch
 import itertools
-import os
 import time
 from functools import partial
 
 import numpy as np
 
-import datetime_functions as dtf
-from draw_data import plot_fit, parse_and_plot_results
-from methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer, GeneticOptimizer
-from optimizer import FluParams
-from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
+from core import datetime_functions as dtf
+from core.methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer
+from core.optimizer import FluParams
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
+from draw_data import plot_fit
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -39,7 +37,7 @@ class Params(FluParams):
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
 
     # Uncomment to run GeneticOptimizer
-    # SIZE = 1
+    SIZE = 1
     POPULATION_SIZE = 500
     CX_PROBABILITY = 0  # 0.5
     MUT_PROBABILITY = 0.2  # 0.2
@@ -58,7 +56,7 @@ def fit(args, population, city_mark):
     elapsed_time = time.time() - t
 
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
-    filepath = 'out25/%s/' % city_mark
+    filepath = 'out/%s/' % city_mark
     filename_out_txt = 'K_out_%s_%s.txt' % (date_int, optimizer_cls.__name__)
 
     with open(filepath + filename_out_txt, 'ab') as f_handle:
@@ -117,7 +115,7 @@ def main():
 
         # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)
         # invoke(all_files, [GeneticOptimizer], population, city_mark)
-        invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+        invoke(all_files, [SLSQPOptimizer],  #, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
                population, city_mark)
 
 if __name__ == '__main__':

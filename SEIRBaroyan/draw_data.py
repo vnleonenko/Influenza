@@ -8,8 +8,8 @@ import matplotlib
 import matplotlib.dates as plt_dates
 import pylab as plt
 
-import datetime_functions as dtf
-from utils import get_flu_data, remove_background_incidence, get_city_name
+from core import datetime_functions as dtf
+from core.utils import get_flu_data, remove_background_incidence, get_city_name
 
 
 def cut_zero_data(y_model):

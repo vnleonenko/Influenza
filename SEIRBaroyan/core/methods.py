@@ -17,13 +17,11 @@
 
 from functools import partial
 
-from deap import base
-from deap import creator
-from deap import tools
+from deap import base, creator, tools
 import numpy as np
 from scipy.optimize import minimize
 
-from optimizer import FluOptimizer
+from .optimizer import FluOptimizer
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"

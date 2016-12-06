@@ -4,7 +4,6 @@
 Наша текущая задача в общей формулировке:
 выяснить, можно ли добиться ускорения по сравнению с BFGS, не проиграв
 в качестве калибровки (или проиграв незначительно).
-В связи с этим сейчас пробуем следующие шаги:
 
 
     * Подвигать значения параметров алгоритмов оптимизации (options) и
@@ -34,9 +33,8 @@ from functools import partial
 import matplotlib
 import pylab as plt
 
-from methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer
-from optimizer import FluParams
-from utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
+from core.optimizer import FluParams
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
 
 __author__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 __copyright__ = "Copyright 2016, ITMO University"

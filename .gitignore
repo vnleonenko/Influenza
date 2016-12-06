@@ -185,3 +185,4 @@ $RECYCLE.BIN/
 .nfs*
 .idea/
 SEIRBaroyan/benchmark/SizeComparison/*.txt
+SEIRBaroyan/out/*/*
