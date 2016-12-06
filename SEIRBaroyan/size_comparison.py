@@ -14,6 +14,7 @@ from functools import partial
 import matplotlib
 import pylab as plt
 
+from core.methods import LBFGSBOptimizer, SLSQPOptimizer, TNCOptimizer
 from core.optimizer import FluParams
 from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
 
@@ -202,8 +203,8 @@ def main():
                 params.SIZE = size
                 params_list.append(params)
 
-        # execute(params_list, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer],
-        #         filename, population, city_mark)
+        execute(params_list, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer],
+                filename, population, city_mark)
 
     draw_all(city_mark, smooth=False)
 
