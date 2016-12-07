@@ -42,6 +42,14 @@ def remove_background_incidence(y):
     return [y[i] - y_min for i in range(0, len(y))]
 
 
+def get_population(csv_file_path: str) -> dict():
+    """return {year: population}"""
+    population = {}
+    for item in parse_csv(csv_file_path):
+        population[item[0]] = float(item[1])
+    return population
+
+
 def get_filename_list(path):
     return list(
         itertools.chain(*[

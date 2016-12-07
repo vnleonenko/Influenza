@@ -183,6 +183,13 @@ $RECYCLE.BIN/
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
-.idea/
+.idea/*
+.idea/dictionaries/*
 SEIRBaroyan/benchmark/SizeComparison/*.txt
 SEIRBaroyan/out/*/*
+.idea/Flu.iml
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/webResources.xml

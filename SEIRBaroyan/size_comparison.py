@@ -16,7 +16,8 @@ import pylab as plt
 
 from core.methods import LBFGSBOptimizer, SLSQPOptimizer, TNCOptimizer
 from core.optimizer import FluParams
-from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list, \
+    get_population
 
 __author__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -188,10 +189,7 @@ def execute(params_list, optimizers, filename, population, city_mark, parallel=T
 
 def main():
     city_mark = 'msk'  # for three cities iterate ['msk', 'spb', 'nsk']
-
-    population = {}  # year: population
-    for item in parse_csv(POPULATION_CSV_FILE % city_mark):
-        population[item[0]] = float(item[1])
+    population = get_population(POPULATION_CSV_FILE % city_mark)
 
     for filename in get_filename_list(INCIDENCE_ROOT % city_mark):
 

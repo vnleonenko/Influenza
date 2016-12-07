@@ -3,13 +3,18 @@
     <words>
       <w>baroyan</w>
       <w>bfgs</w>
+      <w>deap</w>
+      <w>disp</w>
       <w>epid</w>
       <w>filepath</w>
+      <w>ftol</w>
       <w>healthcare</w>
       <w>infectivity</w>
       <w>linecycler</w>
       <w>linewidth</w>
       <w>markersize</w>
+      <w>maxiter</w>
+      <w>pyopt</w>
       <w>rvachev</w>
       <w>tpeak</w>
       <w>unifromly</w>

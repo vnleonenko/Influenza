@@ -18,7 +18,8 @@ import numpy as np
 from core import datetime_functions as dtf
 from core.methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer
 from core.optimizer import FluParams
-from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list, \
+    get_population
 from draw_data import plot_fit
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
@@ -105,12 +106,7 @@ def invoke(files, optimizers, population, city_mark, parallel=True, safe=True):
 
 def main():
     for city_mark in ['msk']:  # for three cities ,'msk','nsk']
-        population = {}  # year: population
-        population_list = parse_csv(r'input_population/population_%s.csv' % city_mark)
-
-        for item in population_list:
-            population[item[0]] = float(item[1])
-
+        population = get_population(r'input_population/population_%s.csv' % city_mark)
         all_files = get_filename_list(r'FLU_rjnamm_rev/FLU_%s/' % city_mark)
 
         # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)

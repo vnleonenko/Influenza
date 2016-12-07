@@ -1,7 +1,7 @@
-numpy
-scipy
-matplotlib
+numpy==1.11.2+mkl
+scipy==0.18.1
+matplotlib==1.5.3
 # Debian: apt-get install python3-tk
 # Windows: SET TCL_LIBRARY ... & SET TK_LIBRARY
 
-deap
+deap==1.0.2
