@@ -21,7 +21,7 @@ from deap import base, creator, tools
 import numpy as np
 from scipy.optimize import minimize
 
-from .optimizer import FluOptimizer
+from .models.baroyan_rvachev import AbstractBaroyanOptimizer
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -29,56 +29,56 @@ __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 
-class BFGSOptimizer(FluOptimizer):
+class BaroyanBFGSOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='BFGS', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class LBFGSBOptimizer(FluOptimizer):
+class BaroyanLBFGSBOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='L-BFGS-B', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class SLSQPOptimizer(FluOptimizer):
+class BaroyanSLSQPOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='SLSQP', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class NelderMeadOptimizer(FluOptimizer):
+class BaroyanNelderMeadOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, *args, **kwargs):
         result = minimize(function, minimize_params, method='Nelder-Mead')
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class PowellOptimizer(FluOptimizer):
+class BaroyanPowellOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='Powell', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class CGOptimizer(FluOptimizer):
+class BaroyanCGOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='CG', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class TNCOptimizer(FluOptimizer):
+class BaroyanTNCOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='TNC', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
-class COBYLAOptimizer(FluOptimizer):
+class BaroyanCOBYLAOptimizer(AbstractBaroyanOptimizer):
     def optimize(self, function, minimize_params, minimize_params_range):
         result = minimize(function, minimize_params, method='COBYLA', bounds=minimize_params_range)
         return result.fun, tuple(result.x)  # fit value, final bunch of optimal values
 
 
 # noinspection PyPep8Naming
-class GeneticOptimizer(FluOptimizer):
+class BaroyanGeneticOptimizer(AbstractBaroyanOptimizer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

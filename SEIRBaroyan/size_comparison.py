@@ -14,9 +14,9 @@ from functools import partial
 import matplotlib
 import pylab as plt
 
-from core.methods import LBFGSBOptimizer, SLSQPOptimizer, TNCOptimizer
-from core.optimizer import FluParams
-from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list, \
+from core.methods import BaroyanLBFGSBOptimizer, BaroyanSLSQPOptimizer, BaroyanTNCOptimizer
+from core.models.baroyan_rvachev import BaroyanParams
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, get_filename_list, \
     get_population
 
 __author__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
@@ -33,7 +33,7 @@ MIN_SIZE, MAX_SIZE = 1, 50
 RAND_SEEDS = [42, 420, 4200]
 
 
-class Params(FluParams):
+class Params(BaroyanParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
     K_RANGE = (1.02, 1.6)
@@ -94,9 +94,9 @@ def plot_comparison(city_year_rand, opt_data, times_data, smooth):
     x_axis = [i for i in range(MIN_SIZE, MAX_SIZE + 1)]
     colors = {'c', 'm', 'y', 'k'}
     opt_color = {
-        'SLSQPOptimizer': 'b',
-        'LBFGSBOptimizer': 'r',
-        'TNCOptimizer': 'g',
+        'BaroyanSLSQPOptimizer': 'b',
+        'BaroyanLBFGSBOptimizer': 'r',
+        'BaroyanTNCOptimizer': 'g',
     }
 
     for optimizer_name in sorted(opt_data.keys()):
@@ -201,7 +201,7 @@ def main():
                 params.SIZE = size
                 params_list.append(params)
 
-        execute(params_list, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer],
+        execute(params_list, [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
                 filename, population, city_mark)
 
     draw_all(city_mark, smooth=False)

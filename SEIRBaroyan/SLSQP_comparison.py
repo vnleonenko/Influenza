@@ -21,18 +21,14 @@
         ваших старых примерах для сравнения.
 """
 
-import itertools
-import os
 import time
 from copy import deepcopy
 from functools import partial
 
-import matplotlib
-import pylab as plt
 from scipy.optimize import minimize
 
-from core.optimizer import FluParams, FluOptimizer
-from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list, \
+from core.models.baroyan_rvachev import BaroyanParams, AbstractBaroyanOptimizer
+from core.utils import get_flu_data, remove_background_incidence, get_filename_list, \
     get_population
 
 __author__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
@@ -49,7 +45,7 @@ MIN_SIZE, MAX_SIZE = 20, 20
 RAND_SEEDS = [42, 420, 4200]
 
 
-class Params(FluParams):
+class Params(BaroyanParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
     K_RANGE = (1.02, 1.6)
@@ -68,7 +64,7 @@ class Params(FluParams):
     }
 
 
-class SLSQPOptimizer(FluOptimizer):
+class SLSQPOptimizer(AbstractBaroyanOptimizer):
     def __init__(self, data, population_quantity, params):
         super().__init__(data, population_quantity, params)
         assert hasattr(params, 'SLSQP_OPTIONS'), "Provide SLSQP_OPTIONS dict() in FluParams instance"
@@ -132,9 +128,9 @@ def fit(params, filename_list, optimizer_cls, population, city_mark, attempts=1)
 #     x_axis = [i for i in range(MIN_SIZE, MAX_SIZE + 1)]
 #     colors = {'c', 'm', 'y', 'k'}
 #     opt_color = {
-#         'SLSQPOptimizer': 'b',
-#         'LBFGSBOptimizer': 'r',
-#         'TNCOptimizer': 'g',
+#         'BaroyanSLSQPOptimizer': 'b',
+#         'BaroyanLBFGSBOptimizer': 'r',
+#         'BaroyanTNCOptimizer': 'g',
 #     }
 #
 #     for optimizer_name in sorted(opt_data.keys()):

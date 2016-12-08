@@ -19,7 +19,7 @@ __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 
-class FluParams:
+class BaroyanParams:
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
 
@@ -43,7 +43,7 @@ class FluParams:
         }
         return switcher.get(day, 0)  # zero infectivity by default
 
-    # FIXME Params for GeneticOptimizer
+    # FIXME Params for BaroyanGeneticOptimizer
     POPULATION_SIZE = 500
     CX_PROBABILITY = 0  # 0.5
     MUT_PROBABILITY = 0.2  # 0.2
@@ -188,11 +188,11 @@ class FitFunction:
 
 
 # noinspection PyPep8Naming
-class FluOptimizer:
+class AbstractBaroyanOptimizer:
     def __init__(self, data, population_quantity, params):
         self.data = data
         self.rho = population_quantity
-        assert isinstance(params, FluParams)
+        assert isinstance(params, BaroyanParams)
         self.params = params
         self.res2 = FitFunction.find_residuals(self.data)
 

@@ -16,9 +16,9 @@ from functools import partial
 import numpy as np
 
 from core import datetime_functions as dtf
-from core.methods import SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer
-from core.optimizer import FluParams
-from core.utils import get_flu_data, remove_background_incidence, get_city_name, parse_csv, get_filename_list, \
+from core.methods import BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer, BaroyanNelderMeadOptimizer
+from core.models.baroyan_rvachev import BaroyanParams
+from core.utils import get_flu_data, remove_background_incidence, get_city_name, get_filename_list, \
     get_population
 from draw_data import plot_fit
 
@@ -28,7 +28,7 @@ __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 
-class Params(FluParams):
+class Params(BaroyanParams):
     N = 3000  # epid duration
     T = 8  # disease duration for a single person
     SIZE = 25
@@ -37,7 +37,7 @@ class Params(FluParams):
     I0_RANGE = (10000.0, 10000.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
 
-    # Uncomment to run GeneticOptimizer
+    # Uncomment to run BaroyanGeneticOptimizer
     # SIZE = 1
     POPULATION_SIZE = 500
     CX_PROBABILITY = 0  # 0.5
@@ -109,9 +109,10 @@ def main():
         population = get_population(r'input_population/population_%s.csv' % city_mark)
         all_files = get_filename_list(r'FLU_rjnamm_rev/FLU_%s/' % city_mark)
 
-        # parse_and_plot_results(city_mark, [GeneticOptimizer], all_files)
-        # invoke(all_files, [GeneticOptimizer], population, city_mark)
-        invoke(all_files, [SLSQPOptimizer, LBFGSBOptimizer, TNCOptimizer, NelderMeadOptimizer],
+        # parse_and_plot_results(city_mark, [BaroyanGeneticOptimizer], all_files)
+        # invoke(all_files, [BaroyanGeneticOptimizer], population, city_mark)
+        invoke(all_files,
+               [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer, BaroyanNelderMeadOptimizer],
                population, city_mark)
 
 if __name__ == '__main__':
