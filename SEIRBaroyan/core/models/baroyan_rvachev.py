@@ -13,6 +13,8 @@ Version history:
 
 import numpy as np
 
+from .helpers import calculate_tpeak_bias
+
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
 __version__ = "5.0"
@@ -59,24 +61,10 @@ class FitFunction:
         self.tpeak_bias = tpeak_bias
 
     @staticmethod
-    def find_residuals(data_list):
-        """Finding the squares of residuals between the real data and it math expectation"""
-        res = 0
-        mean = np.mean(data_list)
-        for item in data_list:
-            res += pow(item - mean, 2)
-        return res
-
-    @staticmethod
     def calculate_peak_bias(x, y):
         x_peak = max(x)
         y_peak = max(y)
         return abs(x_peak - y_peak)
-
-    @staticmethod
-    def max_elem_index(my_list):
-        """returns the index of a highest incidence"""
-        return my_list.index(max(my_list))
 
     def sum_ill(self, y, t):
         """summing the cumulative infectivity of the infected on the moment t"""
@@ -152,9 +140,7 @@ class FitFunction:
         y_model = self.make_simulation(alpha, lam, rho, I0)
 
         # Aligning output by incidence peaks
-        peak_index_real = FitFunction.max_elem_index(list(data))
-        peak_index_model = FitFunction.max_elem_index(list(y_model))
-        delta = peak_index_model - peak_index_real + tpeak_bias  # adding possible peak moment bias
+        delta = calculate_tpeak_bias(y_model, data) + tpeak_bias  # adding possible peak moment bias
 
         #######################################################################
         if delta < 0:
@@ -200,6 +186,15 @@ class AbstractBaroyanOptimizer:
         self.I0_opt = None
         self.R_square_opt = 0
         self.tpeak_bias_opt = None
+
+    @staticmethod
+    def find_residuals(data_list):
+        """Finding the squares of residuals between the real data and it math expectation"""
+        res = 0
+        mean = np.mean(data_list)
+        for item in data_list:
+            res += pow(item - mean, 2)
+        return res
 
     def optimize(self, function, minimize_params, minimize_params_range):
         """
