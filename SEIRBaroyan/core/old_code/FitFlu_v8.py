@@ -52,6 +52,7 @@ min_cases_show = 10 #minimum incidence value to show to the right in the model t
 MIN_EPID_LEN = 100
 MAX_EPID_LEN = 150
 EPID_LEN_PENALTY = 2000000
+SIZE2 = 5
 
 # k1 = 0.5    # S -> E
 # k2 = 0.25   # E -> I
@@ -200,20 +201,20 @@ def calculate_tpeak_bias(x, y):
 #    return False #lacking data on incidence peaks
 
 # ________ общая процедура моделирования ________
-def MakeSimulation(K,N): 
+def MakeSimulation(K,N):
     # ________ ДУ ________
     inInf,k1,k2,k3 = K
     #N = N*3 # удвоим интервал моделирования
 
     t =  np.linspace(0, N-1, N)
     def dX_dt(X, t=0): # Return parameters of the infected populations.
-        S,E,I,T = X 
+        S,E,I,T = X
         return np.array([-k1*S*I,
                       +k1*S*I - k2*E,
                       +k2*E - k3*I,
                       +k3*I])
     # ________ интегрируем ДУ ________
-    from scipy import integrate    
+    from scipy import integrate
     #inInf = 0.01    # начальное число зараженных
     # переделать на zeros
     X0 = np.array([1.-inInf, inInf, 0.0,0.0])  # initials conditions: S,E,I,T
@@ -358,7 +359,7 @@ class FluOptimizer:
         fitDif1 = sum(pow(DAY-M,2))
 
         return fitDif1
-    
+
     def fitOneOutbreak(path, sample_size, shift_range, city_mark, pop_quantity):
 
         fd = GetFluData(path) #Taking all the data from the file
@@ -422,25 +423,29 @@ class FluOptimizer:
         res2 = find_residuals(fluData) #Finding the squares of residuals between the real data and it math expectation
 
         #generating unifromly distributed init values for s_ratio and k1
-        size2 = 5 # 25
+        size2 = SIZE2 # 25
         R_square_opt = -1
-        init_list = []
-        init_list.append(np.random.uniform(0.0000001, 50.0, size2)) #k1
         #init_list.append(np.random.uniform(0.2, 8.0, size2)) #k2
         #init_list.append(np.random.uniform(0.08, 0.34, size2)) #k3“
-        init_list.append(np.random.uniform(0.001, 1.0, size2))  #s_ratio
-        init_list.append(np.random.uniform(0.7, 1.0, size2)) #shift_coef
 
-        init_list = np.array(init_list)
-
+        np.random.seed(42)
+        init_params = zip(
+            [0.0001] * size2,  # Dummy K0
+            np.random.uniform(0.0000001, 50.0, size2), #k1
+            [0.39] * size2,  # Dummy K2
+            [0.133] * size2,  # Dummy K3
+            np.random.uniform(0.001, 1.0, size2),  #s_ratio
+            np.random.uniform(0.7, 1.0, size2)  #shift_coef
+        )
+        init_params = list(init_params)
         ModData = []
         FluOptimizer.cur_optimal_value = -1
 
         #print(init_list[0,:])
 
-        for j in range(len(init_list[0,:])):
+        for j, initK in enumerate(init_params):
             #initK = [0.0001, init_list[0,j], init_list[1,j], init_list[2,j], init_list[3,j], 0.8]
-            initK = [0.0001, init_list[0,j], 0.39, 0.133, init_list[1,j], init_list[2,j]]
+            # initK = [0.0001, init_list[0,j], 0.39, 0.133, init_list[1,j], init_list[2,j]]
             print("J:",j)
             ###
             if R_square_opt>0.8 and j>1:
@@ -492,13 +497,14 @@ class FluOptimizer:
             peak_bias = calculate_peak_bias(FluOptimizer.init_data+vert_shift,ModData[2]+vert_shift)
             tpeak_bias = calculate_tpeak_bias(FluOptimizer.init_data+vert_shift,ModData[2]+vert_shift)
 
-            fpath = 'out\\'+city_mark+'\\'
-            fname_out_txt = 'K_out_'+city_mark+'.txt'
-            f_handle = open(fpath+fname_out_txt, 'ab')
             myDate = (path[-12:-8],path[-8:-6],path[-6:-4])# извлекается из имени файлов
 
             myDate_str = str(myDate[0])+"/"+str(myDate[1])+"/"+str(myDate[2])
             myDate_int = int(str(myDate[0])+str(myDate[1])+str(myDate[2]))
+
+            fpath = '../../benchmark/SEIRModel/'  # +city_mark+'/'
+            fname_out_txt = '{}_{}_old.txt'.format(myDate_int, SIZE2)
+            f_handle = open(fpath+fname_out_txt, 'ab')
             np.savetxt(f_handle, np.column_stack((myDate_int, sample_size, R_square_opt, tpeak_bias, peak_bias, cur_optimal_shift, K_opt[0], K_opt[1], K_opt[2], K_opt[3], shifting_coef_cur, s_ratio_opt, scaling_coef_opt )), fmt="%d %d %f %d %f %d %f %f %f %f %f %f %f")
             f_handle.close()
 
@@ -508,23 +514,24 @@ class FluOptimizer:
 
             ShowFluStat(figure, FluOptimizer.init_data, ModData[0], ModData[1]+vert_shift,ModData[2]+vert_shift, data_left, data_right, sample_size, K_opt, FluOptimizer.cur_optimal_value, R_square_opt, city_mark)
             #fname = "fig3_{0}{1}{2}_nsk.pdf".format(myDate[0],myDate[1],myDate[2])
-            fname_out_plot = 'fig3_{0}{1}{2}_'.format(myDate[0],myDate[1],myDate[2]) + city_mark+'_'+str(sample_size)+'.png'
-            p.savefig(fpath+fname_out_plot, dpi=150, bbox_inches='tight')
+            fname_out_plot = '{0}_{1}_{2}_old.png'.format(city_mark, myDate_int, (sample_size or ''))
+            p.savefig(fpath+'graphs/'+fname_out_plot, dpi=150, bbox_inches='tight')
             #p.show()  # --- вывод данных на экран
             p.close()
 
 
 
+start_time = time()
 
-for city_mark in ['nsk']:
+for city_mark in ['msk']:
     population = {} # year: population
-    population_list = readFromCsvToList(r'input_population\\population_'+city_mark+'.csv')
+    population_list = readFromCsvToList(r'../../input_population/population_'+city_mark+'.csv')
 
     for item in population_list:
             population[item[0]] = float(item[1])
 
     #root = r'FLU\\spb\\'
-    root = r'FLU_rjnamm_rev\\FLU_'+city_mark+'\\'
+    root = r'../../FLU_rjnamm_rev/FLU_'+city_mark+'/'
     allFiles =  list( itertools.chain(* [ [os.path.join(x[0],  f) for f in fnmatch.filter( x[2],"*.txt")] for x in os.walk(root) ]) )
 
 
@@ -545,12 +552,13 @@ for city_mark in ['nsk']:
     #    for i in init_data_point_numbers:
 
     for i in init_data_point_numbers:
-        for file in allFiles:
+        for file in allFiles[:1]:
             print("Init points = ", i)
             myYear = (file[-12:-8])
             #print(population[myYear])
             FluOptimizer.fitOneOutbreak(file, i, shift_range, city_mark, population[myYear])
 
+print('Elapsed time: ' + str(time() - start_time) + ' seconds\n\n')
 
 
 
