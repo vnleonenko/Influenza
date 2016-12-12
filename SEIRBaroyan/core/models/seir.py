@@ -323,8 +323,9 @@ class AbstractSEIROptimizer:
             return max(y) / max(x)
 
         # launching simulation with optimal param set for visualization purpose
+        k0, k1, k2, k3 = self.k_opt
         y_model, S, E, I, R = SEIRFitting.make_simulation(
-            *self.k_opt, len(self.initial_data) * 3)
+            k0, k1, k2, k3, len(self.initial_data) * 3)
 
         level_zero = min(self.data)
         vertical_shift = level_zero * self.shift_coefficient_opt
@@ -336,6 +337,7 @@ class AbstractSEIROptimizer:
         peak_bias = calculate_peak_bias(self.initial_data + vertical_shift, model_data[2] + vertical_shift)
         tpeak_bias = calculate_tpeak_bias(self.initial_data + vertical_shift, model_data[2] + vertical_shift)
 
+        # FIXME remove this hell
         return (y_model, self.R_square_opt, self.k_opt, self.s_ratio_opt,
                 self.shift_coefficient_opt, self.shift_opt, S, E, I, R,
                 peak_bias, tpeak_bias,
