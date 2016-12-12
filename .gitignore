@@ -187,9 +187,3 @@ $RECYCLE.BIN/
 .idea/dictionaries/*
 SEIRBaroyan/benchmark/SizeComparison/*.txt
 SEIRBaroyan/out/*/*
-.idea/Flu.iml
-.idea/inspectionProfiles/
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/webResources.xml
