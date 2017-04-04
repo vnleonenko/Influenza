@@ -53,7 +53,12 @@ def fit(args, population, city_mark):
     t = time.time()
     optimizer = optimizer_cls(data, population[file[-12:-8]], Params())
     optimizer.fit_one_outbreak()
-    y_model, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta = optimizer.get_results()
+    results = optimizer.get_results()
+    y_model, R_square_opt, k_opt, I0_opt, tpeak_bias_opt, delta \
+        = (results[key] for key in [
+            "y_model", "R_square_opt", "k_opt",
+            "I0_opt",  # TODO find proper name
+            "tpeak_bias", "shift_opt"])
     elapsed_time = time.time() - t
 
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов

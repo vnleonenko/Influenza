@@ -160,17 +160,22 @@ def fit(file, optimizer_cls, population, city_mark):
         population_quantity=population[file[-12:-8]],
         params=Params())
     optimizer.fit_one_outbreak()
-    y_model, r_square_opt, k_opt, s_ratio_opt, shift_coefficient_opt,\
+    results = optimizer.get_results()
+    y_model, R_square_opt, k_opt, s_ratio_opt, shift_coefficient_opt,\
         shift_opt, S, E, I, R, peak_bias, tpeak_bias,\
         model_data, data_left, data_right, scaling_coefficient\
-        = optimizer.get_results()
+        = (results[key] for key in [
+            "y_model", "R_square_opt", "k_opt",
+            "s_ratio_opt", "shift_coefficient_opt",
+            "shift_opt", "S", "E", "I", "R", "peak_bias", "tpeak_bias",
+            "model_data", "data_left", "data_right", "scaling_coefficient"])
     elapsed_time = time.time() - t
 
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
     filepath = OUT_PATH  # % city_mark
     filename_out_txt = OUT_FILE % (date_int, Params().SIZE)
     with open(filepath + filename_out_txt, 'ab') as f_handle:
-        np.savetxt(f_handle, np.column_stack((date_int, sample_size or -1, r_square_opt, tpeak_bias, peak_bias,
+        np.savetxt(f_handle, np.column_stack((date_int, sample_size or -1, R_square_opt, tpeak_bias, peak_bias,
                                               shift_opt, k_opt[0], k_opt[1], k_opt[2], k_opt[3],
                                               shift_coefficient_opt, s_ratio_opt, scaling_coefficient)),
                    fmt="%d %d %f %d %f %d %f %f %f %f %f %f %f")
@@ -181,7 +186,7 @@ def fit(file, optimizer_cls, population, city_mark):
     plot_flu_statistics(initial_data, model_data[0],
                         model_data[1] + vertical_shift, model_data[2] + vertical_shift,
                         data_left, data_right,
-                        sample_size, r_square_opt,
+                        sample_size, R_square_opt,
                         city_mark, date_int)
 
 

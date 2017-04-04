@@ -337,8 +337,23 @@ class AbstractSEIROptimizer:
         peak_bias = calculate_peak_bias(self.initial_data + vertical_shift, model_data[2] + vertical_shift)
         tpeak_bias = calculate_tpeak_bias(self.initial_data + vertical_shift, model_data[2] + vertical_shift)
 
-        # FIXME remove this hell
-        return (y_model, self.R_square_opt, self.k_opt, self.s_ratio_opt,
-                self.shift_coefficient_opt, self.shift_opt, S, E, I, R,
-                peak_bias, tpeak_bias,
-                model_data, data_left, data_right, scaling_coefficient)
+        blob = {
+            "y_model": y_model,
+            "R_square_opt": self.R_square_opt,
+            "k_opt": self.k_opt,
+            "s_ratio_opt": self.s_ratio_opt,
+
+            "shift_coefficient_opt": self.shift_coefficient_opt,
+            "shift_opt": self.shift_opt,
+
+            "S": S, "E": E, "I": I, "R": R,
+
+            "peak_bias": peak_bias,
+            "tpeak_bias": tpeak_bias,
+
+            "model_data": model_data,
+            "data_left": data_left,
+            "data_right": data_right,
+            "scaling_coefficient": scaling_coefficient
+        }
+        return blob

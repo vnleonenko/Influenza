@@ -93,7 +93,7 @@ def fit(params, filename_list, optimizer_cls, population, city_mark, attempts=1)
             optimizer.fit_one_outbreak()
             elapsed_time = time.time() - start_time
             avg_time += elapsed_time
-            _, r_square, _, _, _, _ = optimizer.get_results()
+            r_square = optimizer.get_results()["R_square_opt"]
         avg_time /= attempts
         time_total += avg_time
         r_square_total += r_square
