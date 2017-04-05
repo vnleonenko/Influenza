@@ -180,7 +180,7 @@ class AbstractBaroyanOptimizer:
         self.rho = population_quantity
         assert isinstance(params, BaroyanParams)
         self.params = params
-        self.res2 = FitFunction.find_residuals(self.data)
+        self.res2 = self.find_residuals(self.data)
 
         self.k_opt = None
         self.I0_opt = None
@@ -254,4 +254,12 @@ class AbstractBaroyanOptimizer:
 
         R_square_opt = 1 - dist2/self.res2
 
-        return y_model, R_square_opt, self.k_opt, self.I0_opt, self.tpeak_bias_opt, delta
+        blob = {
+            "y_model": y_model,
+            "R_square_opt": R_square_opt,
+            "k_opt": self.k_opt,
+            "I0_opt": self.I0_opt,
+            "tpeak_bias_opt": self.tpeak_bias_opt,
+            "delta": delta
+        }
+        return blob
