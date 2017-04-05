@@ -29,8 +29,8 @@ POPULATION_CSV_FILE = r'input_population/population_%s.csv'
 OUT_PATH = 'benchmark/SizeComparison/'
 OUT_FILE = '%04d_%04d_%s_%02d.txt'  # year, rand_seed, optimizer, size
 
-MIN_SIZE, MAX_SIZE = 1, 2#50
-RAND_SEEDS = [4200]#, 420, 4200]
+MIN_SIZE, MAX_SIZE = 1, 50
+RAND_SEEDS = [42, 420, 4200]
 
 
 class Params(BaroyanParams):
@@ -197,8 +197,7 @@ def main():
     population = get_population(POPULATION_CSV_FILE % city_mark)
 
     for filename in get_filename_list(INCIDENCE_ROOT % city_mark):
-        if "2000" not in filename:
-            continue
+
         params_list = []
         for rand_seed in RAND_SEEDS:
             for size in range(MIN_SIZE, MAX_SIZE + 1):
@@ -207,8 +206,8 @@ def main():
                 params.SIZE = size
                 params_list.append(params)
 
-        execute(params_list, [BaroyanSLSQPOptimizer],# BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
-                filename, population, city_mark, parallel=False, safe=False)
+        execute(params_list, [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
+                filename, population, city_mark)
 
     draw_all(city_mark, smooth=False)
 
