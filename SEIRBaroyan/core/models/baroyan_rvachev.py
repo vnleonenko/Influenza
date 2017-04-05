@@ -175,7 +175,7 @@ class FitFunction:
 
 # noinspection PyPep8Naming
 class AbstractBaroyanOptimizer:
-    def __init__(self, data, population_quantity, params):
+    def __init__(self, data, population_quantity, params, logger_list):
         self.data = data
         self.rho = population_quantity
         assert isinstance(params, BaroyanParams)
@@ -186,6 +186,8 @@ class AbstractBaroyanOptimizer:
         self.I0_opt = None
         self.R_square_opt = 0
         self.tpeak_bias_opt = None
+
+        self.logger_list = logger_list  # FIXME Dirty hack
 
     @staticmethod
     def find_residuals(data_list):
@@ -236,6 +238,9 @@ class AbstractBaroyanOptimizer:
                 k_cur, I0_cur = args
 
                 R_square = 1 - value/self.res2
+
+                if self.logger_list is not None:
+                    self.logger_list.append((k_cur, tpeak_bias_cur, max(R_square, 0.0)))
 
                 # if peak_bias < peak_bias_opt:
                 if R_square > self.R_square_opt or self.k_opt is None:

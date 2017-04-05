@@ -1,7 +1,8 @@
-numpy==1.11.2+mkl
-scipy==0.18.1
-matplotlib==1.5.3
+numpy<=1.12.1+mkl
+scipy<=0.19.0
+matplotlib<=2.0.0
 # Debian: apt-get install python3-tk
 # Windows: SET TCL_LIBRARY ... & SET TK_LIBRARY
 
 deap==1.0.2
+mayavi  # Optional. Better for surfaces
