@@ -9,6 +9,7 @@ import csv
 from functools import partial
 import itertools
 import os
+from pathlib import Path
 import time
 
 from scipy import array
@@ -26,7 +27,7 @@ INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
 POPULATION_CSV_FILE = r'input_population/population_%s.csv'
 DGTS_ROOT = 'benchmark/dgts/'
 CSV_FILE = DGTS_ROOT + '%s/%s_%s_%s.csv'
-PNG_FILE = DGTS_ROOT + '%s/%s_%s_%s.png'
+PNG_FILE = DGTS_ROOT + '%s/%s_%s_%s.pdf'
 
 
 class Params(BaroyanParams):
@@ -34,7 +35,7 @@ class Params(BaroyanParams):
     T = 8  # disease duration for a single person
     SIZE = 25
     DISABLE_RANDOM = True
-    # RANDOM_SEED = 42
+    RANDOM_SEED = 42
     K_RANGE = (1.02, 1.4)
     I0_RANGE = (1.0, 1.0)  # (0.1, 100)
     TPEAK_BIAS_RANGE = range(-7, 7)  # (-3, 3)
@@ -50,22 +51,28 @@ def fit(args, population, city_mark):
     png_filename = PNG_FILE % (file[-12:-8], city_mark, optimizer_cls.__name__, params.SIZE)
 
     os.makedirs(os.path.dirname(csv_filename), exist_ok=True)
-    with open(csv_filename, "w+") as f:
+
+    csv_file = Path(csv_filename)
+    # don't calculate again the same; cutoff for rerun script
+    with open(csv_filename, "r" if csv_file.is_file() else "a+") as f:
         reader = csv.reader(f)
         for idx, row in enumerate(reader):
             # print(str(idx) + ": " + str(row))
             logger_list.append(tuple(float(element) for element in row))
 
-    optimizer = optimizer_cls(data, population[file[-12:-8]], params, logger_list=logger_list)
-    optimizer.fit_one_outbreak()
-    optimizer.get_results()
+    if len(logger_list) == 0:  # results doesn't exists
+        optimizer = optimizer_cls(data, population[file[-12:-8]], params, logger_list=logger_list)
+        optimizer.fit_one_outbreak()
+        optimizer.get_results()
+        # don't calculate again the same; cutoff for rerun script
 
+    # Save results to file
     with open(csv_filename, 'w+', newline='') as f:
         writer = csv.writer(f)
         for row in set(logger_list):
             writer.writerow(row)
 
-    # Drawing
+    # Draw the graph
     data = array(logger_list)
     xs = data[:, 0]
     ys = data[:, 1]
@@ -93,7 +100,7 @@ def fit(args, population, city_mark):
         mlab.ylabel("shift")
         mlab.zlabel("R^2")
         mlab.show()  # TODO disable
-        mlab.savefig(png_filename, dpi=480)
+        mlab.savefig(png_filename, dpi=480, format='pdf')
     except ImportError:
         import sys
         print("Unable to Import mayavi. Drawing in matplotlib", file=sys.stderr)
@@ -119,8 +126,8 @@ def fit(args, population, city_mark):
 
         fig.tight_layout()
 
-        plt.show()  # TODO or:
-        fig.savefig(png_filename, dpi=480)
+        # plt.show()  # or:
+        fig.savefig(png_filename, dpi=480, format='pdf')
 
 
 def fit_safe(*args, **kwargs):
@@ -153,7 +160,7 @@ def invoke(files, optimizers, params_list, population, city_mark, parallel=True,
 def main():
     city_mark = 'spb'  # for three cities ,'msk','nsk']
     population = get_population(POPULATION_CSV_FILE % city_mark)
-    all_files = get_filename_list(INCIDENCE_ROOT % city_mark)[:1]
+    all_files = get_filename_list(INCIDENCE_ROOT % city_mark)
 
     # Filter 2000 only
     # all_files = [x for x in all_files if "2000" in x]
@@ -161,13 +168,13 @@ def main():
     # Filter first two
     # all_files = all_files[:2]
     params_list = []
-    for size in [1]:  # TODO , 10, 20]:
+    for size in [3, 9, 15]:
         params = Params()
         params.SIZE = size
         params_list.append(params)
 
     invoke(all_files,
-           [BaroyanSLSQPOptimizer],  # TODO, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
+           [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
            params_list,
            population, city_mark,
            parallel=True, safe=False)
