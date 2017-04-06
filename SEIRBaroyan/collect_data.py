@@ -95,15 +95,22 @@ def main():
         all_files = get_filename_list(INCIDENCE_ROOT % city_mark)
 
         results = dict()
+        with open('benchmark/dgts/speedup.json') as f:
+            results = json.load(f)
 
         for files_count in range(1, len(all_files) + 1):
-            results[files_count] = dict()
+
+            if str(files_count) not in results:
+                results[str(files_count)] = dict()
 
             for processes_count in [1, 2, 4]:
+                if str(processes_count) in results[str(files_count)]:
+                    continue
+
                 t0 = time.time()
                 invoke(all_files[:files_count], SEIRSLSQPOptimizer, population, city_mark,
                        processes_count=processes_count, safe=False)
-                results[files_count][processes_count] = time.time() - t0
+                results[str(files_count)][str(processes_count)] = time.time() - t0
                 print('%d files, %d processes, %d seconds' % (files_count, processes_count, time.time() - t0))
 
                 dump = json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
