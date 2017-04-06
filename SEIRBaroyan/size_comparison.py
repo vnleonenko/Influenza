@@ -99,9 +99,12 @@ def plot_comparison(city_year_rand, opt_data, times_data, smooth):
     x_axis = [i for i in range(MIN_SIZE, MAX_SIZE + 1)]
     colors = {'c', 'm', 'y', 'k'}
     opt_color = {
-        'BaroyanSLSQPOptimizer': 'b',
-        'BaroyanLBFGSBOptimizer': 'r',
-        'BaroyanTNCOptimizer': 'g',
+        # 'BaroyanSLSQPOptimizer': 'b',  # FIXME after DGTS
+        # 'BaroyanLBFGSBOptimizer': 'r',
+        # 'BaroyanTNCOptimizer': 'g',
+        'SLSQPOptimizer': 'b',
+        'LBFGSBOptimizer': 'r',
+        'TNCOptimizer': 'g',
     }
 
     for optimizer_name in sorted(opt_data.keys()):
@@ -196,18 +199,19 @@ def main():
     city_mark = 'msk'  # for three cities iterate ['msk', 'spb', 'nsk']
     population = get_population(POPULATION_CSV_FILE % city_mark)
 
-    for filename in get_filename_list(INCIDENCE_ROOT % city_mark):
-
-        params_list = []
-        for rand_seed in RAND_SEEDS:
-            for size in range(MIN_SIZE, MAX_SIZE + 1):
-                params = Params()
-                params.RANDOM_SEED = rand_seed
-                params.SIZE = size
-                params_list.append(params)
-
-        execute(params_list, [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
-                filename, population, city_mark)
+    # FIXME uncomment after DGTS
+    # for filename in get_filename_list(INCIDENCE_ROOT % city_mark):
+    #
+    #     params_list = []
+    #     for rand_seed in RAND_SEEDS:
+    #         for size in range(MIN_SIZE, MAX_SIZE + 1):
+    #             params = Params()
+    #             params.RANDOM_SEED = rand_seed
+    #             params.SIZE = size
+    #             params_list.append(params)
+    #
+    #     execute(params_list, [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
+    #             filename, population, city_mark)
 
     draw_all(city_mark, smooth=False)
 
