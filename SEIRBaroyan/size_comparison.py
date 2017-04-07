@@ -91,8 +91,8 @@ def plot_comparison(city_year_rand, opt_data, times_data, smooth):
     city_mark, year, rand_seed = city_year_rand.split(',')
     rand_seed = int(rand_seed)
 
-    fig = plt.figure(figsize=(10, 6) if smooth else (20, 12))
-    matplotlib.rcParams.update({'font.size': 14})
+    fig = plt.figure(figsize=(10, 6))  # if smooth else (20, 12))
+    matplotlib.rcParams.update({'font.size': 20})
 
     ax = fig.add_subplot(111)
 
@@ -125,15 +125,17 @@ def plot_comparison(city_year_rand, opt_data, times_data, smooth):
                 y_axis.append(r_squares[i])
 
         plt.plot(x_axis, y_axis, opt_color[optimizer_name] + "o-",
-                 label='%s %.03f (%d sec)' % (optimizer_name, max(y_axis), times_data[optimizer_name]),
+                 # label='%s %.03f (%d sec)' % (optimizer_name, max(y_axis), times_data[optimizer_name]),
+                 label='%s (%d sec)' % (optimizer_name, times_data[optimizer_name]),
                  linewidth=2.0)
 
     # plt.figtext(0.15, 0.8, "$R^2 = %.3f$" % R2, fontsize=27)
 
-    plt.xlabel('Initial parameters ' + ('number' if smooth else 'index'))
-    plt.ylabel('R^2')
+    plt.xlabel('Iteration ' + ('number' if smooth else 'index'))
+    plt.ylabel('$R^2$')
 
-    plt.title('{0}, {1}. Random seed = {2}'.format(get_city_name(city_mark), year, rand_seed))
+    # plt.title('{0}, {1}. Random seed = {2}'.format(get_city_name(city_mark), year, rand_seed))
+    # plt.title('{0}, {1}'.format(get_city_name(city_mark), year))
     plt.legend(loc='lower right', numpoints=1,
                prop={'size': 16}, fancybox=True, shadow=True)
     plt.grid()
