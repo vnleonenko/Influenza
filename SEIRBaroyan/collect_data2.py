@@ -64,13 +64,12 @@ def fit(args, population, city_mark):
         optimizer = optimizer_cls(data, population[file[-12:-8]], params, logger_list=logger_list)
         optimizer.fit_one_outbreak()
         optimizer.get_results()
-        # don't calculate again the same; cutoff for rerun script
 
-    # Save results to file
-    with open(csv_filename, 'w+', newline='') as f:
-        writer = csv.writer(f)
-        for row in set(logger_list):
-            writer.writerow(row)
+        # Save results to file
+        with open(csv_filename, 'w+', newline='') as f:
+            writer = csv.writer(f)
+            for row in set(logger_list):
+                writer.writerow(row)
 
     # Draw the graph
     data = array(logger_list)
@@ -78,56 +77,57 @@ def fit(args, population, city_mark):
     ys = data[:, 1]
     zs = data[:, 2]
 
-    try:
-        from mayavi import mlab
+    # try:
+    #     from mayavi import mlab
+    #
+    #     # Define the points in 3D space
+    #     # including color code based on Z coordinate.
+    #     pts = mlab.points3d(xs, ys, zs, zs)
+    #
+    #     # Triangulate based on X, Y with Delaunay 2D algorithm.
+    #     # Save resulting triangulation.
+    #     mesh = mlab.pipeline.delaunay2d(pts)
+    #
+    #     # Remove the point representation from the plot
+    #     pts.remove()
+    #
+    #     # Draw a surface based on the triangulation
+    #     surf = mlab.pipeline.surface(mesh, extent=(0, 1, 0, 1, 0, 1))
+    #
+    #     # Simple plot.
+    #     mlab.xlabel("K")
+    #     mlab.ylabel("shift")
+    #     mlab.zlabel("R^2")
+    #     mlab.show()  # TODO disable
+    #     mlab.savefig(png_filename[:-3] + "png")#, dpi=480)
+    #
+    # except ImportError:
+    import sys
+    print("Unable to Import mayavi. Drawing in matplotlib", file=sys.stderr)
 
-        # Define the points in 3D space
-        # including color code based on Z coordinate.
-        pts = mlab.points3d(xs, ys, zs, zs)
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+    from matplotlib import cm
+    from mpl_toolkits.mplot3d import Axes3D
 
-        # Triangulate based on X, Y with Delaunay 2D algorithm.
-        # Save resulting triangulation.
-        mesh = mlab.pipeline.delaunay2d(pts)
+    fig = plt.figure(figsize=(12, 9))
+    ax = fig.add_subplot(111, projection='3d')
 
-        # Remove the point representation from the plot
-        pts.remove()
+    surf = ax.plot_trisurf(xs, ys, zs, cmap=cm.jet, linewidth=0)
+    fig.colorbar(surf)
 
-        # Draw a surface based on the triangulation
-        surf = mlab.pipeline.surface(mesh)
+    ax.xaxis.set_major_locator(MaxNLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(7))
+    ax.zaxis.set_major_locator(MaxNLocator(5))
 
-        # Simple plot.
-        mlab.xlabel("K")
-        mlab.ylabel("shift")
-        mlab.zlabel("R^2")
-        mlab.show()  # TODO disable
-        mlab.savefig(png_filename, dpi=480, format='pdf')
-    except ImportError:
-        import sys
-        print("Unable to Import mayavi. Drawing in matplotlib", file=sys.stderr)
+    ax.set_xlabel('K')
+    ax.set_ylabel('shift')
+    ax.set_zlabel('R^2')
 
-        import matplotlib.pyplot as plt
-        from matplotlib.ticker import MaxNLocator
-        from matplotlib import cm
-        from mpl_toolkits.mplot3d import Axes3D
+    fig.tight_layout()
 
-        fig = plt.figure(figsize=(12, 9))
-        ax = fig.add_subplot(111, projection='3d')
-
-        surf = ax.plot_trisurf(xs, ys, zs, cmap=cm.jet, linewidth=0)
-        fig.colorbar(surf)
-
-        ax.xaxis.set_major_locator(MaxNLocator(5))
-        ax.yaxis.set_major_locator(MaxNLocator(6))
-        ax.zaxis.set_major_locator(MaxNLocator(5))
-
-        ax.set_xlabel('K')
-        ax.set_ylabel('shift')
-        ax.set_zlabel('R^2')
-
-        fig.tight_layout()
-
-        # plt.show()  # or:
-        fig.savefig(png_filename, dpi=480, format='pdf')
+    plt.show()  # or:
+    fig.savefig(png_filename, dpi=480, format='pdf')
 
 
 def fit_safe(*args, **kwargs):

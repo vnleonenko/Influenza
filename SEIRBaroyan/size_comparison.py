@@ -138,8 +138,8 @@ def plot_comparison(city_year_rand, opt_data, times_data, smooth):
                prop={'size': 16}, fancybox=True, shadow=True)
     plt.grid()
 
-    plt.savefig(OUT_PATH + 'graphs/' + ('smooth_' if smooth else '') + city_year_rand + '.png',
-                dpi=450, bbox_inches='tight')
+    plt.savefig(OUT_PATH + 'graphs/' + ('smooth_' if smooth else '') + city_year_rand + '.pdf',
+                dpi=450, format='pdf', bbox_inches='tight')
     # plt.show()
     plt.close()
 
