@@ -12,6 +12,11 @@ import os
 from pathlib import Path
 import time
 
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 from scipy import array
 
 from core.methods import BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer
@@ -102,32 +107,29 @@ def fit(args, population, city_mark):
     #     mlab.savefig(png_filename[:-3] + "png")#, dpi=480)
     #
     # except ImportError:
-    import sys
-    print("Unable to Import mayavi. Drawing in matplotlib", file=sys.stderr)
-
-    import matplotlib.pyplot as plt
-    from matplotlib.ticker import MaxNLocator
-    from matplotlib import cm
-    from mpl_toolkits.mplot3d import Axes3D
+    # import sys
+    # print("Unable to Import mayavi. Drawing in matplotlib", file=sys.stderr)
 
     fig = plt.figure(figsize=(12, 9))
+    matplotlib.rcParams.update({'font.size': 26})
     ax = fig.add_subplot(111, projection='3d')
 
     surf = ax.plot_trisurf(xs, ys, zs, cmap=cm.jet, linewidth=0)
-    fig.colorbar(surf)
+    # fig.colorbar(surf)
 
     ax.xaxis.set_major_locator(MaxNLocator(5))
-    ax.yaxis.set_major_locator(MaxNLocator(7))
-    ax.zaxis.set_major_locator(MaxNLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.zaxis.set_major_locator(MaxNLocator(4))
 
-    ax.set_xlabel('K')
-    ax.set_ylabel('shift')
-    ax.set_zlabel('R^2')
+    ax.set_xlabel('\n\nk')
+    ax.set_ylabel('\n\nshift')
+    ax.set_zlabel('\n\n$R^2$')
+    plt.figtext(0.15, 0.8, "$R^2 = %.3f$" % max(zs), fontsize=32)
 
     fig.tight_layout()
 
-    plt.show()  # or:
-    fig.savefig(png_filename, dpi=480, format='pdf')
+    # plt.show()  # or:
+    fig.savefig(png_filename, dpi=480, format='pdf', bbox_inches='tight', pad_inches=0)
 
 
 def fit_safe(*args, **kwargs):
@@ -176,8 +178,7 @@ def main():
     invoke(all_files,
            [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
            params_list,
-           population, city_mark,
-           parallel=True, safe=False)
+           population, city_mark)  # , parallel=False, safe=False)
 
 
 if __name__ == '__main__':
