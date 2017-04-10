@@ -122,7 +122,7 @@ def fit(args, population, city_mark):
     ax.zaxis.set_major_locator(MaxNLocator(4))
 
     ax.set_xlabel('\n\nk')
-    ax.set_ylabel('\n\nshift')
+    ax.set_ylabel('\n\n$\Delta_p$')
     ax.set_zlabel('\n\n$R^2$')
     plt.figtext(0.15, 0.8, "$R^2 = %.3f$" % max(zs), fontsize=32)
 

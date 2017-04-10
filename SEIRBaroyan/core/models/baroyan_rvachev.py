@@ -175,7 +175,7 @@ class FitFunction:
 
 # noinspection PyPep8Naming
 class AbstractBaroyanOptimizer:
-    def __init__(self, data, population_quantity, params, logger_list):
+    def __init__(self, data, population_quantity, params, logger_list=None):
         self.data = data
         self.rho = population_quantity
         assert isinstance(params, BaroyanParams)
