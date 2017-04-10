@@ -116,7 +116,8 @@ def fit(file, optimizer_cls, population, city_mark):
     city_name = get_city_name(city_mark)
 
     plot_fit(data, y_model, delta, out_pdf, dates_new, R_square_opt, city_name)
-    print("Drawn " + out_pdf + "\nCalculated in " + results['elapsed_time'] + " seconds\n")
+    print("Drawn " + out_pdf +
+          "\nCalculated in " + str(int(results['elapsed_time'])) + " seconds\n")
 
 
 def plot_fit(y_real, y_model, delta, filename, flu_dates, R2, city_name):
