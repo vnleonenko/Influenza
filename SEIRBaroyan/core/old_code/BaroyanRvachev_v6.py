@@ -471,13 +471,13 @@ class FluOptimizer:
 for city_mark in ['spb']: #for three cities ,'msk','nsk']
     print(city_mark)
     population = {} # year: population
-    population_list = readFromCsvToList(r'input_population\\population_'+city_mark+'.csv')
+    population_list = readFromCsvToList('../../input_population/population_'+city_mark+'.csv')
 
     for item in population_list:
             population[item[0]] = float(item[1])
 
     #root = r'FLU\\spb\\'
-    root = r'FLU_rjnamm_rev\\FLU_'+city_mark+'\\'
+    root = '../../FLU_rjnamm_rev/FLU_'+city_mark+'/'
     allFiles =  list( itertools.chain(* [ [os.path.join(x[0],  f) for f in fnmatch.filter( x[2],"*.txt")] for x in os.walk(root) ]) )
 
     #peakStats = findPeakStats(allFiles)

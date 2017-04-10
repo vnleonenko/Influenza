@@ -118,10 +118,10 @@ def plot_separate():
             date_end = datetime(year=year + 1, month=MONTH_END, day=DAY_END).date()
 
             data_list_new = dtf.getDataArrayforGivenTimePeriod(
-                np.loadtxt(r'out_dbases\\flu_dbase_%s.txt' % city['code']),
+                np.loadtxt('out_dbases/flu_dbase_%s.txt' % city['code']),
                 date_start, date_end)
             data_list_biased = dtf.getDataArrayforGivenTimePeriod(
-                np.loadtxt(r'out_dbases\\flu_dbase_%s_biased.txt' % city['code']),
+                np.loadtxt('out_dbases/flu_dbase_%s_biased.txt' % city['code']),
                 date_start, date_end)
 
             incidents = data_list_new[..., 3]

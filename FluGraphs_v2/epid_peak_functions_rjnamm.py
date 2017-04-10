@@ -164,7 +164,7 @@ def plotEpidCurves ( epid_curves, days_list, x_thursday ):
         x_thursday_peak_indices = [i for i in range(0, len(epid_days)) if epid_days[i] in x_thursday]
 
         plt.plot(x_thursday_peak, epid_curve[x_thursday_peak_indices,1], "ro", linewidth=2)
-        fname_curve = 'epi_' + str(int(days_list[epid_curve[0,0]])) + '.txt'
+        fname_curve = 'epi_' + str(int(days_list[int(epid_curve[0,0])])) + '.txt'
         np.savetxt(fname_curve, np.column_stack((days_list_peak, epid_curve[...,1])), fmt="%d %d")
 
     plt.plot([], [], "r", label='Epidemic outbreak')
