@@ -185,4 +185,5 @@ $RECYCLE.BIN/
 .nfs*
 .idea/
 SEIRBaroyan/out/*/*.pdf
+SEIRBaroyan/out/*/*.json
 SEIRBaroyan/benchmark/SizeComparison/graphs/*.png
