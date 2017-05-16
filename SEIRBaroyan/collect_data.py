@@ -17,8 +17,8 @@ __copyright__ = "Copyright 2016, ITMO University"
 __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
-INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
-POPULATION_CSV_FILE = r'input_population/population_%s.csv'
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
 
 
 class Params(SEIRParams):
@@ -95,7 +95,7 @@ def main():
         all_files = get_filename_list(INCIDENCE_ROOT % city_mark)
 
         results = dict()
-        with open('benchmark/dgts/speedup.json') as f:
+        with open('results/dgts/speedup.json') as f:
             results = json.load(f)
 
         for files_count in range(1, len(all_files) + 1):
@@ -114,7 +114,7 @@ def main():
                 print('%d files, %d processes, %d seconds' % (files_count, processes_count, time.time() - t0))
 
                 dump = json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
-                with open('benchmark/dgts/speedup.json', 'w') as f_handle:
+                with open('results/dgts/speedup.json', 'w') as f_handle:
                     f_handle.write(dump)
 
 

@@ -27,6 +27,9 @@ __copyright__ = "Copyright 2016, ITMO University"
 __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
+
 
 class Params(BaroyanParams):
     N = 3000  # epid duration
@@ -62,7 +65,7 @@ def fit(args, population, city_mark):
     elapsed_time = time.time() - t
 
     date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])  # извлекается из имени файлов
-    filepath = 'out/%s/' % city_mark
+    filepath = 'results/MethodsComparison/%s/' % city_mark
     filename_out_txt = 'K_out_%s_%s.txt' % (date_int, optimizer_cls.__name__)
 
     with open(filepath + filename_out_txt, 'ab') as f_handle:
@@ -111,8 +114,8 @@ def invoke(files, optimizers, population, city_mark, parallel=True, safe=True):
 
 def main():
     for city_mark in ['msk']:  # for three cities ,'msk','nsk']
-        population = get_population(r'input_population/population_%s.csv' % city_mark)
-        all_files = get_filename_list(r'FLU_rjnamm_rev/FLU_%s/' % city_mark)
+        population = get_population(POPULATION_CSV_FILE % city_mark)
+        all_files = get_filename_list(INCIDENCE_ROOT % city_mark)
 
         # parse_and_plot_results(city_mark, [BaroyanGeneticOptimizer], all_files)
         # invoke(all_files, [BaroyanGeneticOptimizer], population, city_mark)

@@ -29,9 +29,9 @@ __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
-INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
-POPULATION_CSV_FILE = r'input_population/population_%s.csv'
-DGTS_ROOT = 'benchmark/dgts/'
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
+DGTS_ROOT = 'results/dgts/'
 CSV_FILE = DGTS_ROOT + '%s/%s_%s_%s.csv'
 PNG_FILE = DGTS_ROOT + '%s/%s_%s_%s.pdf'
 
@@ -182,7 +182,7 @@ def main():
     all_files = get_filename_list(INCIDENCE_ROOT % city_mark)
 
     # Filter 2000 only
-    # all_files = [x for x in all_files if "2000" in x]
+    all_files = [x for x in all_files if "2000" in x]
 
     # Filter first two
     # all_files = all_files[:2]

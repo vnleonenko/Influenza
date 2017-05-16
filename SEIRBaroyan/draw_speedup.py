@@ -11,7 +11,7 @@ import time
 import matplotlib
 import matplotlib.pyplot as plt
 
-DGTS_ROOT = 'benchmark/dgts/'
+DGTS_ROOT = 'results/dgts/'
 SPEEDUP_FILE = DGTS_ROOT + 'speedup.json'
 OUTPUT_FILE = DGTS_ROOT + 'speedup.pdf'
 

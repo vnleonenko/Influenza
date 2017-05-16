@@ -24,9 +24,9 @@ __copyright__ = "Copyright 2016, ITMO University"
 __version__ = "0.1"
 
 
-INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
-POPULATION_CSV_FILE = r'input_population/population_%s.csv'
-OUT_PATH = 'benchmark/SizeComparison/'
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
+OUT_PATH = 'results/SizeComparison/'
 OUT_FILE = '%04d_%04d_%s_%02d.txt'  # year, rand_seed, optimizer, size
 
 MIN_SIZE, MAX_SIZE = 1, 50

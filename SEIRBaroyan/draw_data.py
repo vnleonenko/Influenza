@@ -84,7 +84,7 @@ def parse_and_plot_results(city_mark, methods, all_files):
             data = remove_background_incidence(y_real)
 
             date_int = int(file[-12:-8] + file[-8:-6] + file[-6:-4])
-            filepath = 'out25/%s/' % city_mark
+            filepath = 'results/old/%s/' % city_mark
             filename_out_txt = 'K_out_%s_%s.txt' % (date_int, method.__name__)
             out_txt = filepath + filename_out_txt
 

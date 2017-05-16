@@ -450,7 +450,7 @@ class FluOptimizer:
             print('Opt calc: ', 1- dist2/res2)
 
             myDate = (path[-12:-8],path[-8:-6],path[-6:-4])
-            fpath = 'out_new\\'+city_mark+'\\'
+            fpath = 'results/old/'+city_mark+'/'
             fname_out_txt = 'K_out_'+city_mark+'.txt'
 
             dates_new = [dtf.convertFloatToDate(x) for x in dates]
@@ -471,13 +471,13 @@ class FluOptimizer:
 for city_mark in ['spb']: #for three cities ,'msk','nsk']
     print(city_mark)
     population = {} # year: population
-    population_list = readFromCsvToList('../../input_population/population_'+city_mark+'.csv')
+    population_list = readFromCsvToList('../../dta/population/'+city_mark+'.csv')
 
     for item in population_list:
             population[item[0]] = float(item[1])
 
     #root = r'FLU\\spb\\'
-    root = '../../FLU_rjnamm_rev/FLU_'+city_mark+'/'
+    root = '../../data/incidence/'+city_mark+'/'
     allFiles =  list( itertools.chain(* [ [os.path.join(x[0],  f) for f in fnmatch.filter( x[2],"*.txt")] for x in os.walk(root) ]) )
 
     #peakStats = findPeakStats(allFiles)

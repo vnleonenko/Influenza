@@ -24,9 +24,9 @@ __copyright__ = "Copyright 2016, ITMO University"
 __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
-INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
-POPULATION_CSV_FILE = r'input_population/population_%s.csv'
-OUT_PATH = 'benchmark/SEIRModel/'
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
+OUT_PATH = 'results/SEIRModel/'
 OUT_FILE = '%d_%02d.txt'  # year_month_day, size
 
 
@@ -219,8 +219,8 @@ def invoke(files, optimizer_cls, population, city_mark, parallel=True, safe=True
 
 def main():
     for city_mark in ['msk']:  # for three cities ,'msk','nsk']
-        population = get_population(r'input_population/population_%s.csv' % city_mark)
-        all_files = get_filename_list(r'FLU_rjnamm_rev/FLU_%s/' % city_mark)[:1]
+        population = get_population(r'data/population/%s.csv' % city_mark)
+        all_files = get_filename_list(INCIDENCE_ROOT)[:1]
 
         invoke(all_files, SEIRSLSQPOptimizer, population, city_mark, parallel=False, safe=False)
 

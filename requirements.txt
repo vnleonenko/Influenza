@@ -5,4 +5,4 @@ matplotlib<=2.0.0
 # Windows: SET TCL_LIBRARY ... & SET TK_LIBRARY
 
 deap==1.0.2
-mayavi  # Optional. Better for surfaces
+# mayavi  # Optional. Better for surfaces

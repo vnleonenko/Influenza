@@ -28,9 +28,9 @@ __version__ = "5.0"
 __maintainer__ = "Nikita Seleznev (ne.seleznev@gmail.com)"
 
 CITIES = ['spb', ]  # ['msk', 'nsk', 'spb']
-INCIDENCE_ROOT = r'FLU_rjnamm_rev/FLU_%s/'
-POPULATION_CSV_FILE = r'input_population/population_%s.csv'
-OUT_PATH = 'out/BaroyanRvachev/'
+INCIDENCE_ROOT = r'data/incidence/%s/'
+POPULATION_CSV_FILE = r'data/population/%s.csv'
+OUT_PATH = 'results/old/BaroyanRvachev/'
 OUT_FILE = '%s_%d_%diter.json'  # city, year_month_day, size
 OUT_GRAPH_FILE = 'fig5_%s_%d_%diter.pdf'  # city, year_month_day, size
 
