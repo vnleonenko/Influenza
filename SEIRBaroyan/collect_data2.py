@@ -19,10 +19,11 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from scipy import array
 
-from core.methods import BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer
+from core.methods import BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer,\
+    BaroyanTNCOptimizer
 from core.models.baroyan_rvachev import BaroyanParams
-from core.utils import get_flu_data, remove_background_incidence, get_filename_list, \
-    get_population
+from core.utils import get_flu_data, remove_background_incidence,\
+    get_filename_list, get_population
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -52,8 +53,9 @@ def fit(args, population, city_mark):
     data = remove_background_incidence(y_real)
 
     logger_list = []
-    csv_filename = CSV_FILE % (file[-12:-8], city_mark, optimizer_cls.__name__, params.SIZE)
-    png_filename = PNG_FILE % (file[-12:-8], city_mark, optimizer_cls.__name__, params.SIZE)
+    params_ = (file[-12:-8], city_mark, optimizer_cls.__name__, params.SIZE)
+    csv_filename = CSV_FILE % params_
+    png_filename = PNG_FILE % params_
 
     os.makedirs(os.path.dirname(csv_filename), exist_ok=True)
 
@@ -66,14 +68,27 @@ def fit(args, population, city_mark):
             logger_list.append(tuple(float(element) for element in row))
 
     if len(logger_list) == 0:  # results doesn't exists
-        optimizer = optimizer_cls(data, population[file[-12:-8]], params, logger_list=logger_list)
+        optimizer = optimizer_cls(data, population[file[-12:-8]], params,
+                                  logger_list=logger_list)
         optimizer.fit_one_outbreak()
         optimizer.get_results()
+
+        # store only the best R^2 values
+        data_ = dict()  # (k) -> (I_0, R^2)
+        for item in logger_list:
+            if item[0] in data_:
+                data_[item[0]].append(item[1:])
+            else:
+                data_[item[0]] = [item[1:]]
+        logger_list = []
+        for key, value in data_.items():
+            I_0, R2 = max(value, key=lambda v: v[1])  # with greatest R^2
+            logger_list.append((key, I_0, R2, ))
 
         # Save results to file
         with open(csv_filename, 'w+', newline='') as f:
             writer = csv.writer(f)
-            for row in set(logger_list):
+            for row in sorted(logger_list, key=lambda x: x[0]):
                 writer.writerow(row)
 
     # Draw the graph
@@ -129,7 +144,8 @@ def fit(args, population, city_mark):
     fig.tight_layout()
 
     # plt.show()  # or:
-    fig.savefig(png_filename, dpi=480, format='pdf', bbox_inches='tight', pad_inches=0)
+    fig.savefig(png_filename, dpi=480, format='pdf', bbox_inches='tight',
+                pad_inches=0)
 
 
 def fit_safe(*args, **kwargs):
@@ -139,7 +155,8 @@ def fit_safe(*args, **kwargs):
         return e
 
 
-def invoke(files, optimizers, params_list, population, city_mark, parallel=True, safe=True):
+def invoke(files, optimizers, params_list, population, city_mark,
+           parallel=True, safe=True):
     if safe:
         function = fit_safe
     else:
@@ -176,7 +193,9 @@ def main():
         params_list.append(params)
 
     invoke(all_files,
-           [BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer, BaroyanTNCOptimizer],
+           [BaroyanSLSQPOptimizer,
+            BaroyanLBFGSBOptimizer,
+            BaroyanTNCOptimizer],
            params_list,
            population, city_mark)  # , parallel=False, safe=False)
 
