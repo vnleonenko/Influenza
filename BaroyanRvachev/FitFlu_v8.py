@@ -502,7 +502,7 @@ class FluOptimizer:
             myDate_str = str(myDate[0])+"/"+str(myDate[1])+"/"+str(myDate[2])
             myDate_int = int(str(myDate[0])+str(myDate[1])+str(myDate[2]))
 
-            fpath = '../../results/SEIRModel/'  # +city_mark+'/'
+            fpath = 'results/SEIRModel/'  # +city_mark+'/'
             fname_out_txt = '{}_{}_old.txt'.format(myDate_int, SIZE2)
             f_handle = open(fpath+fname_out_txt, 'ab')
             np.savetxt(f_handle, np.column_stack((myDate_int, sample_size, R_square_opt, tpeak_bias, peak_bias, cur_optimal_shift, K_opt[0], K_opt[1], K_opt[2], K_opt[3], shifting_coef_cur, s_ratio_opt, scaling_coef_opt )), fmt="%d %d %f %d %f %d %f %f %f %f %f %f %f")
@@ -525,13 +525,13 @@ start_time = time()
 
 for city_mark in ['msk']:
     population = {} # year: population
-    population_list = readFromCsvToList(r'../../data/population/'+city_mark+'.csv')
+    population_list = readFromCsvToList(r'../data/population/'+city_mark+'.csv')
 
     for item in population_list:
             population[item[0]] = float(item[1])
 
     #root = r'FLU\\spb\\'
-    root = r'../../data/incidence/'+city_mark+'/'
+    root = r'../data/incidence/'+city_mark+'/'
     allFiles =  list( itertools.chain(* [ [os.path.join(x[0],  f) for f in fnmatch.filter( x[2],"*.txt")] for x in os.walk(root) ]) )
 
 
