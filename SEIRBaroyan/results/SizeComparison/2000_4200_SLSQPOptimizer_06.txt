@@ -1,3 +1,0 @@
-0.406882520558
-Elapsed time: 6 seconds
-
