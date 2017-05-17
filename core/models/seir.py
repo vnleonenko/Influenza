@@ -154,8 +154,8 @@ class SEIRFitting:
         N_zeros = len(M) - len(DAY)
         assert N_zeros >= 0  # considering the case when model data is always of greater length than the real data
 
-        date_begin = dtf.convertFloatToDate(dates[0])
-        date_end = dtf.convertFloatToDate(dates[-1])
+        date_begin = dtf.convert_float_to_date(dates[0])
+        date_end = dtf.convert_float_to_date(dates[-1])
         dates_new = []
         data_left = shift
 
@@ -179,7 +179,7 @@ class SEIRFitting:
         dates_range2 = [date_end + datetime.timedelta(days=x) for x in range(0, days_between2.days)]
 
         dates_new.extend(dates_range1)
-        dates_new.extend([dtf.convertFloatToDate(x) for x in dates])
+        dates_new.extend([dtf.convert_float_to_date(x) for x in dates])
         dates_new.extend(dates_range2)
 
         # Calculating the old parameter scaling_coef for the comparison purposes
