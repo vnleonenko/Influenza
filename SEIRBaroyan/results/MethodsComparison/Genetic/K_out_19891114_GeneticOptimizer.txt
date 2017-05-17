@@ -1,5 +1,0 @@
-                                               (population, generations, P(mutation))
-
-19891114 0.908184 1.085815 10000.000000 -6 19  (500, 50, 0.2)
-Elapsed time: 8039 seconds
-
