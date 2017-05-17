@@ -1,78 +1,71 @@
-## synopsis
+## Synopsis
 
-todo at the top of the file there should be a short introduction and/ or overview that explains **what** the project is. this description should match descriptions added for package managers (gemspec, package.json, etc.)
+TODO at the top of the file there should be a short introduction and/ or overview that explains **what** the project is. this description should match descriptions added for package managers (gemspec, package.json, etc.)
 
-## code example
+## Code example
 
-todo show what the library does as concisely as possible, developers should be able to figure out **how** your project solves their problem by looking at the code example. make sure the api you are showing off is obvious, and that your code is short and concise.
+TODO show what the library does as concisely as possible, developers should be able to figure out **how** your project solves their problem by looking at the code example. make sure the api you are showing off is obvious, and that your code is short and concise.
 
-## motivation
+## Motivation
 
-todo a short description of the motivation behind the creation and maintenance of the project. this should explain **why** the project exists.
+TODO a short description of the motivation behind the creation and maintenance of the project. this should explain **why** the project exists.
 
-## installation
+## Installation
 
-we recommend you to use virtual environment for this project. read more [here][venv-python]
+We recommend you to use a virtual environment for this project.
+Read more [here][venv-python]
 
 ```sh
-$ git clone https://github.com/vnleonenko/influenza
-$ cd influenza
+$ git clone https://github.com/vnleonenko/Influenza
+$ cd Influenza
 $ python -m venv .venv
-$ source .venv/bin/activate  # for windows ".venv/scripts/activate"
+$ source .venv/bin/activate  # for Windows ".venv/scripts/activate"
 (.venv) $ pip install -r requirements.txt
 ```
 
-if you have troubles with requirements installation, ensure that you don't have any spaces in path to your python interpreter. if so, create it in another place.
-if you still have problems, follow installation process for [linux][venv-linux], [windows][venv-windows], [os x][venv-osx]
+If you have troubles with requirements installation, ensure that you don't
+have any spaces in path to your python interpreter. If so, create it in
+another place.
+If you still have problems, follow installation process for
+[linux][venv-linux], [windows][venv-windows] or [os x][venv-osx].
 
-todo provide code examples and explanations of how to get the project.
+## Project overview
 
-## project overview
-
-* [**BaroyanRvachev/**](BaroyanRvachev/) — legacy code (deprecated nov 2016),
-    baroyan-rvachev and seir models implementations.
+* [**BaroyanRvachev/**](BaroyanRvachev/) — legacy code (deprecated in Nov 2016),
+    Baroyan-Rvachev and SEIR models implementations.
     `BaroyanRvachev_v6.py` script still working fine
-* [**FluGraphs_v2/**](FluGraphs_v2/) — legacy code (deprecated dec 2016),
-    useful visualisation tools for rjnamm and incidence interpolation
+* [**FluGraphs_v2/**](FluGraphs_v2/) — mostly old code,
+    useful visualisation tools for RJNAMM and incidence interpolation
     error computation
-* **core/** — library, containing abstract baroyan-rvachev and seir models
-    (under **models/**), and their implementations in **methods.py**
-* **data/** — *incidence* and *population* datasets for
-    considered cities - currently msk, spb, nsk, provided by
+* [**core/**](core/) — library, containing abstract Baroyan-Rvachev and
+    SEIR models (in **models/** module), and their implementations in
+    **methods.py**
+* [**data/**](data/) — *incidence* and *population* datasets for
+    considered cities - currently {msk, spb, nsk}, provided by
     [Research Institute of Influenza][InfluenzaInstitute]
-* [**experiments/**](experiments/README.md) — directory, containing all the experiments and results
+* [**experiments/**](experiments/) — directory, containing all the experiments and results
     for some of them (included because of huge computational time)
 
+## Tests
 
-seirbaroyan/core/ -- корень "библиотеки"
-seirbaroyan/core/models/ -- абстрактные оптимизаторы
-seirbaroyan/core//methods.py -- реализации методов
-
-seirbaroyan/core/old_code -- старый код, который вы мне отправляли, практически не тронутый. baroyanrvachev_v6.py работает
-
-flugraphs_v2/ -- тоже старый код, незначительные изменения
-flugraphs_v2/compile_data_file_v2.py -- вычисление и рисования отклонения интерполированной недельной (суммы дневных( заболеваемости и фактической недельной заболеваемости
-
-## tests
-
-todo describe and show how to run the tests with code examples.
+TODO describe and show how to run the tests with code examples.
 fixme add usage to size_comparison.py how to generate *.png
 
-## contributors
+## Contributors
 
-all the implemented experiments are located in **experiments** directory
-and obey following conventions for 'low coupling' reasons:
+All the implemented experiments are located in **experiments** directory
+and obey the following conventions:
 
-* path to results built using `common.results_path`
-* to get population dict for specified city
+* Paths to results are built using `common.RESULTS_PATH`
+* To get population dict for specified city
     `common.get_population(city_mark)` procedure is used
-* to obtain a list of filenames with incidence data
+* To obtain a list of filenames with incidence data
     `common.get_incidence_filenames(city_mark)` procedure is used
 
 
-## license
+## License
 
-todo a short snippet describing the license (mit, apache, etc.)
+This project is licensed under the terms of the [GNU GPLv3](LICENSE) license.
 
 
 
