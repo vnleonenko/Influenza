@@ -17,12 +17,15 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.projections as proj
 from scipy import array
 
 from common import get_flu_data, get_population, get_incidence_filenames, RESULTS_PATH, remove_background_incidence
 from core.methods import BaroyanSLSQPOptimizer, BaroyanLBFGSBOptimizer,\
     BaroyanTNCOptimizer
 from core.models.baroyan_rvachev import BaroyanParams
+
+proj.projection_registry.register(Axes3D)
 
 __author__ = "Vasily Leonenko (vnleonenko@yandex.ru)"
 __copyright__ = "Copyright 2016, ITMO University"
@@ -70,16 +73,16 @@ def fit(args, population, city_mark):
         optimizer.get_results()
 
         # store only the best R^2 values
-        data_ = dict()  # (k) -> (I_0, R^2)
-        for item in logger_list:
-            if item[0] in data_:
-                data_[item[0]].append(item[1:])
-            else:
-                data_[item[0]] = [item[1:]]
-        logger_list = []
-        for key, value in data_.items():
-            I_0, R2 = max(value, key=lambda v: v[1])  # with greatest R^2
-            logger_list.append((key, I_0, R2, ))
+        # data_ = dict()  # (k) -> (I_0, R^2)
+        # for item in logger_list:
+        #     if item[0] in data_:
+        #         data_[item[0]].append(item[1:])
+        #     else:
+        #         data_[item[0]] = [item[1:]]
+        # logger_list = []
+        # for key, value in data_.items():
+        #     I_0, R2 = max(value, key=lambda v: v[1])  # with greatest R^2
+        #     logger_list.append((key, I_0, R2, ))
 
         # Save results to file
         with open(csv_filename, 'w+', newline='') as f:
